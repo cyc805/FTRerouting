@@ -30,6 +30,8 @@
 #include "ipv4-global-routing.h"
 #include "global-route-manager.h"
 
+#include "scratch/node-id-tag.h"
+
 NS_LOG_COMPONENT_DEFINE ("Ipv4GlobalRouting");
 
 namespace ns3 {

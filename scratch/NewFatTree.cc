@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
                   //std::cout<< "assign ip is "<< Ipv4Address(ip1)<<std::endl;
                   address.SetBase (Ipv4Address(ip1), "255.255.255.248");
                   server_ip = address.Assign(link);
-                  IpServerMap[server_ip.Get(0)] = serverNode;
+                  IpServerMap[server_ip.GetAddress(0)] = serverNode;
         	   }
 
            }
