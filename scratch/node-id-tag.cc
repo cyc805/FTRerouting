@@ -19,32 +19,8 @@
  */
 
 #include "node-id-tag.h"
-using namespace ns3;
+//using namespace ns3;
 
 // define this class in a public header
 
-TypeId NodeIdTag::GetTypeId(void) {
-	static TypeId tid =
-			TypeId("scratch::NodeIdTag").SetParent<Tag>().AddConstructor<
-					NodeIdTag>();
-	return tid;
-}
-TypeId NodeIdTag::GetInstanceTypeId(void) const {
-	return GetTypeId();
-}
-uint32_t NodeIdTag::GetSerializedSize(void) const {
-	return sizeof(uint16_t) * 3;
-}
-void NodeIdTag::Serialize(TagBuffer i) const {
-	i.WriteU16(id_pod);
-	i.WriteU16(id_switch);
-	i.WriteU16(id_level);
-}
-void NodeIdTag::Deserialize(TagBuffer i) {
-	id_pod = i.ReadU16();
-	id_switch = i.ReadU16();
-	id_level = i.ReadU16();
-}
-void NodeIdTag::Print(std::ostream &os) const {
-	os << "node id = " << id_pod << "," << id_switch << "," << id_level;
-}
+

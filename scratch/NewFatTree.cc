@@ -300,7 +300,7 @@ int main(int argc, char *argv[])
     	  Simulator::Destroy ();
     delete Pod;
 
+	NS_LOG_INFO("Done");
 	return 0;
-    	NS_LOG_INFO("Done");
 }// End of program
 
