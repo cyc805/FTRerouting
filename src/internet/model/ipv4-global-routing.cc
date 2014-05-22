@@ -507,6 +507,17 @@ bool Ipv4GlobalRouting::RouteInput(Ptr<const Packet> p,
 	}
 	// Next, try to find a route
 	NS_LOG_LOGIC ("Unicast destination- looking up global route");
+
+	/*--------------------------------Chunzhi------------------------------*/
+	Ipv4Address srcIp = header.GetSource();
+	Ipv4Address dstIp = header.GetDestination();
+//	uint protocol = header.GetProtocol();
+//	uint16_t srcPort = 0;
+//	uint16_t dstPort = 0;
+	IpServerMap[srcIp].Print(std::cout);
+	IpServerMap[dstIp].Print(std::cout);
+	/*---------------------------------------------------------------------*/
+
 	Ptr<Ipv4Route> rtentry = LookupGlobal(header.GetDestination());
 	if (rtentry != 0) {
 		NS_LOG_LOGIC ("Found unicast destination- calling unicast callback");
