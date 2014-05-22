@@ -25,8 +25,14 @@
 #include "ns3/constant-position-mobility-model.h"
 #include "ns3/gnuplot.h"
 
+#include "src/network/model/node-id-tag.h"
+
 using namespace ns3;
 using namespace std;
+
+std::map<int, int> IpServerMap;
+//std::map<Ipv4Address, Node> IpServerMap;
+
 const int Port_num = 8; // set the switch number
 /**
  *This function is used to construct the ip address
@@ -115,8 +121,6 @@ int main(int argc, char *argv[]) {
 
 	cmd.Parse(argc, argv);
 
-	std::map<Ipv4Address, Ptr<Node> > IpServerMap;
-
 	Ipv4InterfaceContainer p2p_ip;
 	InternetStackHelper internet;
 	Ipv4InterfaceContainer server_ip;
@@ -169,7 +173,9 @@ int main(int argc, char *argv[]) {
 				//std::cout<< "assign ip is "<< Ipv4Address(ip1)<<std::endl;
 				address.SetBase(Ipv4Address(ip1), "255.255.255.248");
 				server_ip = address.Assign(link);
-				IpServerMap[server_ip.GetAddress(0)] = serverNode;
+//				IpServerMap[server_ip.GetAddress(0)] = *serverNode;
+//				std::cout << IpServerMap[Ipv4Address("10.0.0.1")].GetId()
+//						<< std::endl;
 			}
 
 		}

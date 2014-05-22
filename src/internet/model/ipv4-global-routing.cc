@@ -60,8 +60,12 @@
 #include "src/network/model/node-id-tag.h"
 
 using namespace std;
+using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE("Ipv4GlobalRouting");
+
+//std::map<Ipv4Address, Node> IpServerMap;
+std::map<int, int> IpServerMap;
 
 namespace ns3 {
 
@@ -394,16 +398,18 @@ Ptr<Ipv4Route> Ipv4GlobalRouting::RouteOutput(Ptr<Packet> p,
 	NS_LOG_FUNCTION (this << p << &header << oif << &sockerr);
 
 	/**--------------------Chunzhi------------------------**/
-//	NodeIdTag nodeTag;
-//	nodeTag.id_pod = 0;
-//	nodeTag.id_switch = 1;
-//	nodeTag.id_level = 2;
+	NodeIdTag nodeTag;
+	nodeTag.id_pod = 0;
+	nodeTag.id_switch = 1;
+	nodeTag.id_level = 2;
 
 //	Ipv4Address srcIp = header.GetSource();
 //	Ipv4Address dstIp = header.GetDestination();
 //	uint protocol = header.GetProtocol();
 //	uint16_t srcPort = 0;
 //	uint16_t dstPort = 0;
+	std::cout << IpServerMap[3] << std::endl;
+
 //
 ////	// The journey of a packet, please refer to "http://www.nsnam.org/docs/release/3.10/manual/html/internet-stack.html"
 ////	// (1) if method "LookupGlobal" is called by "RouteOutput" (source sends out a packet), p may be a dummy packet (can be NULL??).

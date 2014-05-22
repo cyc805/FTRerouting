@@ -12,6 +12,11 @@
 //#include "ns3/uinteger.h"
 #include <iostream>
 
+using namespace ns3;
+
+//extern std::map<Ipv4Address, Node> IpServerMap;
+extern std::map<int, int> IpServerMap;
+
 namespace ns3 {
 
 class NodeIdTag: public Tag {
