@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
 //						i * (Port_num * Port_num / 4) + j * (Port_num / 2) + k)->SetId_FatTree(
 //						i, j, k); // labling the host server
 
-				serverNode->idTag = NodeIdTag(i,j,k);
+				serverNode->idTag = NodeIdTag(i, j, k);
 				node.Add(node_l2switch.Get(i * (Port_num / 2) + j));
 				link = p2p.Install(node);
 				// assign the ip address of the two device.
@@ -204,26 +204,37 @@ int main(int argc, char *argv[]) {
 	}  //end of the connections construct between l2 switches and l1 switches
 	   // Now connect the core switches and the l2 switches
 
-	int Pod0[16] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
-	int Pod1[16] = { 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16 };
-	int Pod2[16] = { 1, 6, 12, 15, 2, 5, 11, 16, 3, 8, 10, 13, 4, 7, 9, 14 };
-	int Pod3[16] = { 1, 7, 10, 16, 2, 8, 9, 15, 3, 5, 12, 14, 4, 6, 11, 13 };
-	int Pod4[16] = { 1, 8, 11, 14, 2, 7, 12, 13, 3, 6, 9, 16, 4, 5, 10, 15 };
-	int Pod5[16] = { 1, 5, 10, 13, 2, 6, 9, 14, 3, 7, 12, 15, 4, 8, 11, 16 };
-	int Pod6[16] = { 1, 5, 11, 13, 2, 6, 12, 14, 3, 7, 9, 15, 4, 8, 10, 16 };
-	int Pod7[16] = { 1, 5, 12, 13, 2, 6, 11, 14, 3, 7, 10, 15, 4, 8, 9, 16 };
-	int **Pod = new int *[Port_num];
-	for (int i = 0; i < Port_num; i++) {
-		Pod[i] = new int[Port_num * Port_num / 4];
-	}
-	Pod[0] = Pod0;
-	Pod[1] = Pod1;
-	Pod[2] = Pod2;
-	Pod[3] = Pod3;
-	Pod[4] = Pod4;
-	Pod[5] = Pod5;
-	Pod[6] = Pod6;
-	Pod[7] = Pod7;
+	int Pod[Port_num][Port_num * Port_num / 4] =
+//	int Pod0[16] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
+//	int Pod1[16] = { 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16 };
+//	int Pod2[16] = { 1, 6, 12, 15, 2, 5, 11, 16, 3, 8, 10, 13, 4, 7, 9, 14 };
+//	int Pod3[16] = { 1, 7, 10, 16, 2, 8, 9, 15, 3, 5, 12, 14, 4, 6, 11, 13 };
+//	int Pod4[16] = { 1, 8, 11, 14, 2, 7, 12, 13, 3, 6, 9, 16, 4, 5, 10, 15 };
+//	int Pod5[16] = { 1, 5, 10, 13, 2, 6, 9, 14, 3, 7, 12, 15, 4, 8, 11, 16 };
+//	int Pod6[16] = { 1, 5, 11, 13, 2, 6, 12, 14, 3, 7, 9, 15, 4, 8, 10, 16 };
+//	int Pod7[16] = { 1, 5, 12, 13, 2, 6, 11, 14, 3, 7, 10, 15, 4, 8, 9, 16 };
+			{ { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }, { 1, 5,
+					9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16 }, { 1, 6,
+					12, 15, 2, 5, 11, 16, 3, 8, 10, 13, 4, 7, 9, 14 }, { 1, 7,
+					10, 16, 2, 8, 9, 15, 3, 5, 12, 14, 4, 6, 11, 13 }, { 1, 8,
+					11, 14, 2, 7, 12, 13, 3, 6, 9, 16, 4, 5, 10, 15 }, { 1, 5,
+					10, 13, 2, 6, 9, 14, 3, 7, 12, 15, 4, 8, 11, 16 }, { 1, 5,
+					11, 13, 2, 6, 12, 14, 3, 7, 9, 15, 4, 8, 10, 16 }, { 1, 5,
+					12, 13, 2, 6, 11, 14, 3, 7, 10, 15, 4, 8, 9, 16 } };
+//	int **Pod = new int *[Port_num];
+//	for (int i = 0; i < Port_num; i++) {
+//		Pod[i] = new int[Port_num * Port_num / 4];
+//	}
+//	Pod[0] = Pod0;
+//	Pod[1] = Pod1;
+//	Pod[2] = Pod2;
+//	Pod[3] = Pod3;
+//	Pod[4] = Pod4;
+//	Pod[5] = Pod5;
+//	Pod[6] = Pod6;
+//	Pod[7] = Pod7;
+//
+
 	int temp = 0;
 	for (int i = 0; i < Port_num; i++)	//cycling among the pods
 			{
@@ -299,9 +310,15 @@ int main(int argc, char *argv[]) {
 	Simulator::Stop(Seconds(20.0));
 	Simulator::Run();
 	Simulator::Destroy();
-	delete Pod;
+//	for (int i = 0; i < Port_num; i++) {
+//		delete []Pod[i];
+//		//Pod[i] = NULL;
+//	}
+//	delete []Pod;
+//	//Pod = NULL;
 
 	NS_LOG_INFO("Done");
+	std::cout<<"done"<<std::endl;
 	return 0;
 }        // End of program
 
