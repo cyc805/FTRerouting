@@ -100,6 +100,13 @@ Ipv4GlobalRouting::~Ipv4GlobalRouting() {
 	NS_LOG_FUNCTION (this);
 }
 
+/*-----------------------------Chunzhi-------------------------*/
+uint32_t Ipv4GlobalRouting::GetECMPIndex(Ptr<const Packet> p,
+		const Ipv4Header &header, uint nRoutes, uint32_t iif) {
+	return 0;
+}
+/*----------------------------------------------------------*/
+
 void Ipv4GlobalRouting::AddHostRouteTo(Ipv4Address dest, Ipv4Address nextHop,
 		uint32_t interface) {
 	NS_LOG_FUNCTION (this << dest << nextHop << interface);
@@ -143,7 +150,8 @@ void Ipv4GlobalRouting::AddASExternalRouteTo(Ipv4Address network,
 }
 
 Ptr<Ipv4Route> Ipv4GlobalRouting::LookupGlobal(Ipv4Address dest,
-		Ptr<NetDevice> oif) {
+		const Ipv4Header &header, Ptr<NetDevice> oif, Ptr<const Packet> p,
+		uint32_t iif) {
 	NS_LOG_FUNCTION (this << dest << oif);NS_LOG_LOGIC ("Looking for route for destination " << dest);
 	Ptr<Ipv4Route> rtentry = 0;
 	// store all available routes that bring packets to their destination
@@ -208,8 +216,9 @@ Ptr<Ipv4Route> Ipv4GlobalRouting::LookupGlobal(Ipv4Address dest,
 		// ECMP routing is enabled, or always select the first route
 		// consistently if random ECMP routing is disabled
 		uint32_t selectIndex;
-		if (m_randomEcmpRouting) {
-			selectIndex = m_rand->GetInteger(0, allRoutes.size() - 1);
+		if (allRoutes.size() > 1 && m_randomEcmpRouting) {
+			//selectIndex = m_rand->GetInteger (0, allRoutes.size ()-1);
+			selectIndex = GetECMPIndex(p, header, allRoutes.size(), iif); // for specific ECMP strategy (by Chunzhi)
 		} else {
 			selectIndex = 0;
 		}
@@ -223,6 +232,7 @@ Ptr<Ipv4Route> Ipv4GlobalRouting::LookupGlobal(Ipv4Address dest,
 		rtentry->SetGateway(route->GetGateway());
 		uint32_t interfaceIdx = route->GetInterface();
 		rtentry->SetOutputDevice(m_ipv4->GetNetDevice(interfaceIdx));
+
 		return rtentry;
 	} else {
 		return 0;
@@ -398,17 +408,13 @@ Ptr<Ipv4Route> Ipv4GlobalRouting::RouteOutput(Ptr<Packet> p,
 	NS_LOG_FUNCTION (this << p << &header << oif << &sockerr);
 
 	/**--------------------Chunzhi------------------------**/
-	NodeIdTag nodeTag;
-	nodeTag.id_pod = 0;
-	nodeTag.id_switch = 1;
-	nodeTag.id_level = 2;
 
-//	Ipv4Address srcIp = header.GetSource();
-//	Ipv4Address dstIp = header.GetDestination();
-//	uint protocol = header.GetProtocol();
-//	uint16_t srcPort = 0;
-//	uint16_t dstPort = 0;
-	std::cout << IpServerMap[Ipv4Address("10.0.0.1")].id_pod << std::endl;
+	Ipv4Address dstIp = header.GetDestination();
+	NodeIdTag dstNodeTag = IpServerMap[dstIp];
+	// add a new destination node id tag to the packet.
+	p->AddPacketTag(
+			NodeIdTag(dstNodeTag.id_pod, dstNodeTag.id_switch,
+					dstNodeTag.id_level));
 
 //
 ////	// The journey of a packet, please refer to "http://www.nsnam.org/docs/release/3.10/manual/html/internet-stack.html"
@@ -444,7 +450,7 @@ Ptr<Ipv4Route> Ipv4GlobalRouting::RouteOutput(Ptr<Packet> p,
 // See if this is a unicast packet we have a route for.
 //
 	NS_LOG_LOGIC ("Unicast destination- looking up");
-	Ptr<Ipv4Route> rtentry = LookupGlobal(header.GetDestination(), oif);
+	Ptr<Ipv4Route> rtentry = LookupGlobal(header.GetDestination(), header, oif);
 	if (rtentry) {
 		sockerr = Socket::ERROR_NOTERROR;
 	} else {
@@ -518,7 +524,9 @@ bool Ipv4GlobalRouting::RouteInput(Ptr<const Packet> p,
 	IpServerMap[dstIp].Print(std::cout);
 	/*---------------------------------------------------------------------*/
 
-	Ptr<Ipv4Route> rtentry = LookupGlobal(header.GetDestination());
+	Ptr<Ipv4Route> rtentry = LookupGlobal(header.GetDestination(), header, 0, p,
+			iif);
+
 	if (rtentry != 0) {
 		NS_LOG_LOGIC ("Found unicast destination- calling unicast callback");
 		ucb(rtentry, p, header);
