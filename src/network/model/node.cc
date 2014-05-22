@@ -39,7 +39,24 @@ namespace ns3 {
 
 NS_OBJECT_ENSURE_REGISTERED(Node);
 
-NodeIdTag::NodeIdTag() :
+NodeId::NodeId() {
+	this->id_pod = 0xffffffff;
+	this->id_switch = 0xffffffff;
+	this->id_level = 0xffffffff;
+}
+
+NodeId::NodeId(uint32_t id_pod, uint32_t id_switch, uint32_t id_level) {
+	this->id_pod = id_pod;
+	this->id_switch = id_switch;
+	this->id_level = id_level;
+}
+
+void NodeId::Print(std::ostream &os) {
+	os << "node tag id = " << id_pod << "," << id_switch << "," << id_level
+			<< std::endl;
+}
+
+SrcIdTag::SrcIdTag() :
 		Tag() {
 
 	id_pod = 0xffffffff;
@@ -47,7 +64,91 @@ NodeIdTag::NodeIdTag() :
 	id_level = 0xffffffff;
 
 }
-NodeIdTag::NodeIdTag(uint32_t id_pod_, uint32_t id_switch_,
+SrcIdTag::SrcIdTag(uint32_t id_pod_, uint32_t id_switch_, uint32_t id_level_) {
+
+	id_pod = id_pod_;
+	id_switch = id_switch_;
+	id_level = id_level_;
+
+}
+
+TypeId SrcIdTag::GetTypeId(void) {
+	static TypeId tid = TypeId("ns3::SrcIdTag").SetParent<Tag>().AddConstructor<
+			SrcIdTag>();
+	return tid;
+}
+TypeId SrcIdTag::GetInstanceTypeId(void) const {
+	return GetTypeId();
+}
+uint32_t SrcIdTag::GetSerializedSize(void) const {
+	return sizeof(uint32_t) * 3;
+}
+void SrcIdTag::Serialize(TagBuffer i) const {
+	i.WriteU32(id_pod);
+	i.WriteU32(id_switch);
+	i.WriteU32(id_level);
+}
+void SrcIdTag::Deserialize(TagBuffer i) {
+	id_pod = i.ReadU32();
+	id_switch = i.ReadU32();
+	id_level = i.ReadU32();
+}
+void SrcIdTag::Print(std::ostream &os) const {
+	os << "node tag id = " << id_pod << "," << id_switch << "," << id_level
+			<< std::endl;
+}
+
+DstIdTag::DstIdTag() :
+		Tag() {
+
+	id_pod = 0xffffffff;
+	id_switch = 0xffffffff;
+	id_level = 0xffffffff;
+
+}
+DstIdTag::DstIdTag(uint32_t id_pod_, uint32_t id_switch_, uint32_t id_level_) {
+
+	id_pod = id_pod_;
+	id_switch = id_switch_;
+	id_level = id_level_;
+
+}
+
+TypeId DstIdTag::GetTypeId(void) {
+	static TypeId tid = TypeId("ns3::DstIdTag").SetParent<Tag>().AddConstructor<
+			DstIdTag>();
+	return tid;
+}
+TypeId DstIdTag::GetInstanceTypeId(void) const {
+	return GetTypeId();
+}
+uint32_t DstIdTag::GetSerializedSize(void) const {
+	return sizeof(uint32_t) * 3;
+}
+void DstIdTag::Serialize(TagBuffer i) const {
+	i.WriteU32(id_pod);
+	i.WriteU32(id_switch);
+	i.WriteU32(id_level);
+}
+void DstIdTag::Deserialize(TagBuffer i) {
+	id_pod = i.ReadU32();
+	id_switch = i.ReadU32();
+	id_level = i.ReadU32();
+}
+void DstIdTag::Print(std::ostream &os) const {
+	os << "node tag id = " << id_pod << "," << id_switch << "," << id_level
+			<< std::endl;
+}
+
+TurningIdTag::TurningIdTag() :
+		Tag() {
+
+	id_pod = 0xffffffff;
+	id_switch = 0xffffffff;
+	id_level = 0xffffffff;
+
+}
+TurningIdTag::TurningIdTag(uint32_t id_pod_, uint32_t id_switch_,
 		uint32_t id_level_) {
 
 	id_pod = id_pod_;
@@ -56,28 +157,29 @@ NodeIdTag::NodeIdTag(uint32_t id_pod_, uint32_t id_switch_,
 
 }
 
-TypeId NodeIdTag::GetTypeId(void) {
+TypeId TurningIdTag::GetTypeId(void) {
 	static TypeId tid =
-			TypeId("ns3::NodeIdTag").SetParent<Tag>().AddConstructor<NodeIdTag>();
+			TypeId("ns3::TurningIdTag").SetParent<Tag>().AddConstructor<
+					TurningIdTag>();
 	return tid;
 }
-TypeId NodeIdTag::GetInstanceTypeId(void) const {
+TypeId TurningIdTag::GetInstanceTypeId(void) const {
 	return GetTypeId();
 }
-uint32_t NodeIdTag::GetSerializedSize(void) const {
+uint32_t TurningIdTag::GetSerializedSize(void) const {
 	return sizeof(uint32_t) * 3;
 }
-void NodeIdTag::Serialize(TagBuffer i) const {
+void TurningIdTag::Serialize(TagBuffer i) const {
 	i.WriteU32(id_pod);
 	i.WriteU32(id_switch);
 	i.WriteU32(id_level);
 }
-void NodeIdTag::Deserialize(TagBuffer i) {
+void TurningIdTag::Deserialize(TagBuffer i) {
 	id_pod = i.ReadU32();
 	id_switch = i.ReadU32();
 	id_level = i.ReadU32();
 }
-void NodeIdTag::Print(std::ostream &os) const {
+void TurningIdTag::Print(std::ostream &os) const {
 	os << "node tag id = " << id_pod << "," << id_switch << "," << id_level
 			<< std::endl;
 }
@@ -115,19 +217,20 @@ TypeId Node::GetTypeId(void) {
 	return tid;
 }
 void Node::SetId_FatTree(uint32_t id0, uint32_t id1, uint32_t idlevel) {
-	Id0 = id0;
-	Id1 = id1;
-	Idlevel = idlevel;
+//	Id0 = id0;
+//	Id1 = id1;
+//	Idlevel = idlevel;
+	nodeId_FatTree = NodeId(id0, id1, idlevel);
 }
-uint32_t Node::GetId0_FatTree(void) {
-	return Id0;
-}
-uint32_t Node::GetId1_FatTree(void) {
-	return Id1;
-}
-uint32_t Node::GetIdlevel_FatTree(void) {
-	return Idlevel;
-}
+//uint32_t Node::GetId0_FatTree(void) {
+//	return Id0;
+//}
+//uint32_t Node::GetId1_FatTree(void) {
+//	return Id1;
+//}
+//uint32_t Node::GetIdlevel_FatTree(void) {
+//	return Idlevel;
+//}
 Node::Node() :
 		m_id(0), m_sid(0) {
 	NS_LOG_FUNCTION (this);

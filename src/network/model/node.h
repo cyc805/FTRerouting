@@ -42,7 +42,15 @@ class Application;
 class Packet;
 class Address;
 
-class NodeIdTag: public Tag {
+class NodeId {
+public:
+	uint32_t id_pod, id_switch, id_level;
+	NodeId();
+	NodeId(uint32_t id_pod, uint32_t id_switch, uint32_t id_level);
+	void Print(std::ostream &os);
+};
+
+class SrcIdTag: public Tag {
 public:
 	static TypeId GetTypeId(void);
 	virtual TypeId GetInstanceTypeId(void) const;
@@ -50,14 +58,40 @@ public:
 	virtual void Serialize(TagBuffer i) const;
 	virtual void Deserialize(TagBuffer i);
 	virtual void Print(std::ostream &os) const;
-	NodeIdTag();
-	NodeIdTag(uint32_t id_pod, uint32_t id_switch, uint32_t id_level);
+	SrcIdTag();
+	SrcIdTag(uint32_t id_pod, uint32_t id_switch, uint32_t id_level);
 
 	uint32_t id_pod, id_switch, id_level;
 
 };
+class DstIdTag: public Tag {
+public:
+	static TypeId GetTypeId(void);
+	virtual TypeId GetInstanceTypeId(void) const;
+	virtual uint32_t GetSerializedSize(void) const;
+	virtual void Serialize(TagBuffer i) const;
+	virtual void Deserialize(TagBuffer i);
+	virtual void Print(std::ostream &os) const;
+	DstIdTag();
+	DstIdTag(uint32_t id_pod, uint32_t id_switch, uint32_t id_level);
 
+	uint32_t id_pod, id_switch, id_level;
 
+};
+class TurningIdTag: public Tag {
+public:
+	static TypeId GetTypeId(void);
+	virtual TypeId GetInstanceTypeId(void) const;
+	virtual uint32_t GetSerializedSize(void) const;
+	virtual void Serialize(TagBuffer i) const;
+	virtual void Deserialize(TagBuffer i);
+	virtual void Print(std::ostream &os) const;
+	TurningIdTag();
+	TurningIdTag(uint32_t id_pod, uint32_t id_switch, uint32_t id_level);
+
+	uint32_t id_pod, id_switch, id_level;
+
+};
 
 /**
  * \ingroup network
@@ -218,7 +252,7 @@ public:
 	 */
 	void SetId_FatTree(uint32_t id0, uint32_t id1, uint32_t idlevel);
 
-	NodeIdTag idTag;
+	NodeId nodeId_FatTree;
 	/*
 	 * get the number of the specific id
 	 * para id, the possible value could be id0, id1, idlevel
@@ -237,9 +271,9 @@ protected:
 	virtual void DoInitialize(void);
 private:
 	void NotifyDeviceAdded(Ptr<NetDevice> device);
-	uint32_t Id0; //used to do selfrouting
-	uint32_t Id1; //used to do selfrouting
-	uint32_t Idlevel; //used to do selfrouting
+//	uint32_t Id0; //used to do selfrouting
+//	uint32_t Id1; //used to do selfrouting
+//	uint32_t Idlevel; //used to do selfrouting
 	bool NonPromiscReceiveFromDevice(Ptr<NetDevice> device, Ptr<const Packet>,
 			uint16_t protocol, const Address &from);
 	bool PromiscReceiveFromDevice(Ptr<NetDevice> device, Ptr<const Packet>,
@@ -270,7 +304,6 @@ private:
 
 } // namespace ns3
 
-
-extern std::map<Ipv4Address, NodeIdTag> IpServerMap;
+extern std::map<Ipv4Address, NodeId> IpServerMap;
 
 #endif /* NODE_H */

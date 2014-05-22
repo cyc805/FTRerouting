@@ -334,22 +334,23 @@ void PointToPointNetDevice::Receive(Ptr<Packet> packet) {
 		std::cout << "L4 protocol = " << (uint32_t) ipHeader.GetProtocol()
 				<< std::endl;
 
-		NodeIdTag nodeIdTag;
+		DstIdTag nodeIdTag;
 		packet->PeekPacketTag(nodeIdTag);
 
-		bool isDeliverUp = nodeIdTag.id_pod == node->idTag.id_pod
-				&& nodeIdTag.id_switch == node->idTag.id_switch
-				&& nodeIdTag.id_level == node->idTag.id_level;
+		bool isDeliverUp = nodeIdTag.id_pod == node->nodeId_FatTree.id_pod
+				&& nodeIdTag.id_switch == node->nodeId_FatTree.id_switch
+				&& nodeIdTag.id_level == node->nodeId_FatTree.id_level;
 
-//		std::cout << "dst ip:" << ipHeader.GetDestination() << std::endl;
-//		std::cout << "dst node tag: ";
-//		nodeIdTag.Print(std::cout);
-//		std::cout << "current node/switch tag: ";
-//		node->idTag.Print(std::cout);
+		std::cout << "dst ip:" << ipHeader.GetDestination() << std::endl;
+		std::cout << "dst node tag: ";
+		nodeIdTag.Print(std::cout);
+		std::cout << "current node/switch tag: ";
+		node->nodeId_FatTree.Print(std::cout);
 
 		if (!isDeliverUp) { // forward to next hop
 
 			std::cout << "forward" << std::endl;
+
 			uint32_t oifIndex = 1; //TODO
 
 			NS_ASSERT(node->GetDevice(oifIndex) != this);
@@ -460,7 +461,6 @@ bool PointToPointNetDevice::Send(Ptr<Packet> packet, const Address &dest,
 		uint16_t protocolNumber) {
 	NS_LOG_FUNCTION_NOARGS ();NS_LOG_LOGIC ("p=" << packet << ", dest=" << &dest);NS_LOG_LOGIC ("UID is " << packet->GetUid ());
 
-	std::cout << "protocol number" << protocolNumber << std::endl;
 	//
 	// If IsLinkUp() is false it means there is no channel to send any packet
 	// over so we just hit the drop trace on the packet and return an error.

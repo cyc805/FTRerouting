@@ -30,7 +30,7 @@
 using namespace ns3;
 using namespace std;
 
-std::map<Ipv4Address, NodeIdTag> IpServerMap;
+std::map<Ipv4Address, NodeId> IpServerMap;
 //std::map<Ipv4Address, Node> IpServerMap;
 
 const int Port_num = 8; // set the switch number
@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
 //						i * (Port_num * Port_num / 4) + j * (Port_num / 2) + k)->SetId_FatTree(
 //						i, j, k); // labling the host server
 
-				serverNode->idTag = NodeIdTag(i, j, k);
+				serverNode->nodeId_FatTree = NodeId(i, j, k);
 				node.Add(node_l2switch.Get(i * (Port_num / 2) + j));
 				link = p2p.Install(node);
 				// assign the ip address of the two device.
@@ -175,7 +175,8 @@ int main(int argc, char *argv[]) {
 				//std::cout<< "assign ip is "<< Ipv4Address(ip1)<<std::endl;
 				address.SetBase(Ipv4Address(ip1), "255.255.255.248");
 				server_ip = address.Assign(link);
-				IpServerMap[server_ip.GetAddress(0)] = serverNode->idTag;
+				IpServerMap[server_ip.GetAddress(0)] =
+						serverNode->nodeId_FatTree;
 //				std::cout << IpServerMap[Ipv4Address("10.0.0.1")].GetId()
 //						<< std::endl;
 			}
@@ -267,20 +268,24 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	/*for(int i =0; i<(Port_num*Port_num*Port_num/4); i++ )//show the server ID
-	 {
-	 std::cout<< "the ID for the server is"<<node_server.Get(i)->GetId0_FatTree() <<node_server.Get(i)->GetId1_FatTree()<<node_server.Get(i)->GetIdlevel_FatTree()<<std::endl;
-	 }
-	 for(int i = 0; i<(Port_num*Port_num/2); i++)//show the l1switch and l2switch ID
-	 {
-	 std::cout<< "the ID for the l1switch is"<<node_l1switch.Get(i)->GetId0_FatTree() <<node_l1switch.Get(i)->GetId1_FatTree()<<node_l1switch.Get(i)->GetIdlevel_FatTree()<<std::endl;
-	 std::cout<< "the ID for the l2switch is"<<node_l2switch.Get(i)->GetId0_FatTree() <<node_l2switch.Get(i)->GetId1_FatTree()<<node_l2switch.Get(i)->GetIdlevel_FatTree()<<std::endl;
-	 }
-	 for(int i = 0; i<(Port_num*Port_num/4); i++)
-	 {
-	 std::cout<< "the ID for the l0switch is"<<node_l0switch.Get(i)->GetId0_FatTree() <<node_l0switch.Get(i)->GetId1_FatTree()<<node_l0switch.Get(i)->GetIdlevel_FatTree()<<std::endl;
-	 }
-	 */
+	for (int i = 0; i < (Port_num * Port_num * Port_num / 4); i++) //show the server ID
+			{
+		std::cout << "the ID for the server is";
+		node_server.Get(i)->nodeId_FatTree.Print(std::cout);
+	}
+	for (int i = 0; i < (Port_num * Port_num / 2); i++) //show the l1switch and l2switch ID
+			{
+		std::cout << "the ID for the l1switch is";
+		node_l1switch.Get(i)->nodeId_FatTree.Print(std::cout);
+
+		std::cout << "the ID for the l2switch is";
+		node_l2switch.Get(i)->nodeId_FatTree.Print(std::cout);
+	}
+	for (int i = 0; i < (Port_num * Port_num / 4); i++) {
+		std::cout << "the ID for the l0switch is";
+		node_l0switch.Get(i)->nodeId_FatTree.Print(std::cout);
+	}
+
 	//uint32_t id = node_l2switch.Get(5)->GetNDevices();
 	///std::cout << "id = " << id <<std::endl;
 	Ipv4GlobalRoutingHelper::PopulateRoutingTables();
@@ -303,7 +308,7 @@ int main(int argc, char *argv[]) {
 	echoClient.SetAttribute("MaxPackets", UintegerValue(1));
 	echoClient.SetAttribute("Interval", TimeValue(Seconds(1.0)));
 	echoClient.SetAttribute("PacketSize", UintegerValue(1024));
-	ApplicationContainer clientApps = echoClient.Install(node_server.Get(18));
+	ApplicationContainer clientApps = echoClient.Install(node_server.Get(5));
 	clientApps.Start(Seconds(2.0));
 	clientApps.Stop(Seconds(10.0));
 
@@ -318,7 +323,7 @@ int main(int argc, char *argv[]) {
 //	//Pod = NULL;
 
 	NS_LOG_INFO("Done");
-	std::cout<<"done"<<std::endl;
+	std::cout << "done" << std::endl;
 	return 0;
 }        // End of program
 
