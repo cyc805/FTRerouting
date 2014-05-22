@@ -39,8 +39,6 @@ namespace ns3 {
 
 NS_OBJECT_ENSURE_REGISTERED(Node);
 
-
-
 NodeIdTag::NodeIdTag() :
 		Tag() {
 
@@ -60,8 +58,7 @@ NodeIdTag::NodeIdTag(uint32_t id_pod_, uint32_t id_switch_,
 
 TypeId NodeIdTag::GetTypeId(void) {
 	static TypeId tid =
-			TypeId("ns3::NodeIdTag").SetParent<Tag>().AddConstructor<
-					NodeIdTag>();
+			TypeId("ns3::NodeIdTag").SetParent<Tag>().AddConstructor<NodeIdTag>();
 	return tid;
 }
 TypeId NodeIdTag::GetInstanceTypeId(void) const {
@@ -81,7 +78,8 @@ void NodeIdTag::Deserialize(TagBuffer i) {
 	id_level = i.ReadU32();
 }
 void NodeIdTag::Print(std::ostream &os) const {
-	os << "node id = " << id_pod << "," << id_switch << "," << id_level;
+	os << "node tag id = " << id_pod << "," << id_switch << "," << id_level
+			<< std::endl;
 }
 
 /*
@@ -131,7 +129,7 @@ uint32_t Node::GetIdlevel_FatTree(void) {
 	return Idlevel;
 }
 Node::Node() :
-		m_id(0), m_sid(0){
+		m_id(0), m_sid(0) {
 	NS_LOG_FUNCTION (this);
 	Construct();
 }
@@ -306,7 +304,7 @@ bool Node::ReceiveFromDevice(Ptr<NetDevice> device, Ptr<const Packet> packet,
 		NetDevice::PacketType packetType, bool promiscuous) {
 	NS_LOG_FUNCTION (this << device << packet << protocol << &from << &to << packetType << promiscuous);
 	NS_ASSERT_MSG(Simulator::GetContext() == GetId(),
-			"Received packet with erroneous context ; " << "make sure the channels in use are correctly updating events context " << "when transfering events from one node to another."); NS_LOG_DEBUG ("Node " << GetId () << " ReceiveFromDevice:  dev "
+			"Received packet with erroneous context ; " << "make sure the channels in use are correctly updating events context " << "when transfering events from one node to another.");NS_LOG_DEBUG ("Node " << GetId () << " ReceiveFromDevice:  dev "
 			<< device->GetIfIndex () << " (type=" << device->GetInstanceTypeId ().GetName ()
 			<< ") Packet UID " << packet->GetUid ());
 	bool found = false;
