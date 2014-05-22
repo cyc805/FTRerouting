@@ -65,7 +65,7 @@ using namespace ns3;
 NS_LOG_COMPONENT_DEFINE("Ipv4GlobalRouting");
 
 //std::map<Ipv4Address, Node> IpServerMap;
-std::map<int, int> IpServerMap;
+std::map<Ipv4Address, NodeIdTag> IpServerMap;
 
 namespace ns3 {
 

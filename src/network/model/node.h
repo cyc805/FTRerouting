@@ -28,6 +28,7 @@
 #include "ns3/ptr.h"
 #include "ns3/net-device.h"
 #include <string>
+#include "src/network/model/node-id-tag.h"
 
 namespace ns3 {
 
@@ -194,6 +195,8 @@ public:
 	 * used to set the ID of every node
 	 */
 	void SetId_FatTree(uint32_t id0, uint32_t id1, uint32_t idlevel);
+
+	NodeIdTag idTag;
 	/*
 	 * get the number of the specific id
 	 * para id, the possible value could be id0, id1, idlevel

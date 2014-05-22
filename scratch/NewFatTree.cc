@@ -30,7 +30,7 @@
 using namespace ns3;
 using namespace std;
 
-std::map<int, int> IpServerMap;
+std::map<Ipv4Address, NodeIdTag> IpServerMap;
 //std::map<Ipv4Address, Node> IpServerMap;
 
 const int Port_num = 8; // set the switch number
@@ -163,9 +163,10 @@ int main(int argc, char *argv[]) {
 				Ptr<Node> serverNode = node_server.Get(
 						i * (Port_num * Port_num / 4) + j * (Port_num / 2) + k);
 				node.Add(serverNode);
-				node_server.Get(
-						i * (Port_num * Port_num / 4) + j * (Port_num / 2) + k)->SetId_FatTree(
-						i, j, k); // labling the host server
+				//node_server.Get(
+//						i * (Port_num * Port_num / 4) + j * (Port_num / 2) + k)->SetId_FatTree(
+//						i, j, k); // labling the host server
+				serverNode->idTag = NodeIdTag(i,j,k);
 				node.Add(node_l2switch.Get(i * (Port_num / 2) + j));
 				link = p2p.Install(node);
 				// assign the ip address of the two device.
@@ -173,7 +174,7 @@ int main(int argc, char *argv[]) {
 				//std::cout<< "assign ip is "<< Ipv4Address(ip1)<<std::endl;
 				address.SetBase(Ipv4Address(ip1), "255.255.255.248");
 				server_ip = address.Assign(link);
-//				IpServerMap[server_ip.GetAddress(0)] = *serverNode;
+				IpServerMap[server_ip.GetAddress(0)] = serverNode->idTag;
 //				std::cout << IpServerMap[Ipv4Address("10.0.0.1")].GetId()
 //						<< std::endl;
 			}

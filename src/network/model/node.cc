@@ -86,7 +86,7 @@ uint32_t Node::GetIdlevel_FatTree(void) {
 	return Idlevel;
 }
 Node::Node() :
-		m_id(0), m_sid(0) {
+		m_id(0), m_sid(0) , idTag(){
 	NS_LOG_FUNCTION (this);
 	Construct();
 }
