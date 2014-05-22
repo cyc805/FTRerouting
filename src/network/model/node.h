@@ -28,13 +28,36 @@
 #include "ns3/ptr.h"
 #include "ns3/net-device.h"
 #include <string>
-#include "src/network/model/node-id-tag.h"
+
+#include "ns3/tag.h"
+#include <iostream>
+#include "ns3/ipv4-address.h"
+#include <map>
+
+using namespace ns3;
 
 namespace ns3 {
 
 class Application;
 class Packet;
 class Address;
+
+class NodeIdTag: public Tag {
+public:
+	static TypeId GetTypeId(void);
+	virtual TypeId GetInstanceTypeId(void) const;
+	virtual uint32_t GetSerializedSize(void) const;
+	virtual void Serialize(TagBuffer i) const;
+	virtual void Deserialize(TagBuffer i);
+	virtual void Print(std::ostream &os) const;
+	NodeIdTag();
+	NodeIdTag(uint32_t id_pod, uint32_t id_switch, uint32_t id_level);
+
+	uint32_t id_pod, id_switch, id_level;
+
+};
+
+
 
 /**
  * \ingroup network
@@ -56,7 +79,6 @@ class Address;
 class Node: public Object {
 public:
 	static TypeId GetTypeId(void);
-
 
 	Node();
 	/**
@@ -247,5 +269,8 @@ private:
 };
 
 } // namespace ns3
+
+
+extern std::map<Ipv4Address, NodeIdTag> IpServerMap;
 
 #endif /* NODE_H */

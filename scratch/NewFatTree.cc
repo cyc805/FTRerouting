@@ -25,7 +25,7 @@
 #include "ns3/constant-position-mobility-model.h"
 #include "ns3/gnuplot.h"
 
-#include "src/network/model/node-id-tag.h"
+#include "ns3/node.h"
 
 using namespace ns3;
 using namespace std;

@@ -39,6 +39,51 @@ namespace ns3 {
 
 NS_OBJECT_ENSURE_REGISTERED(Node);
 
+
+
+NodeIdTag::NodeIdTag() :
+		Tag() {
+
+	id_pod = 0xffffffff;
+	id_switch = 0xffffffff;
+	id_level = 0xffffffff;
+
+}
+NodeIdTag::NodeIdTag(uint32_t id_pod_, uint32_t id_switch_,
+		uint32_t id_level_) {
+
+	id_pod = id_pod_;
+	id_switch = id_switch_;
+	id_level = id_level_;
+
+}
+
+TypeId NodeIdTag::GetTypeId(void) {
+	static TypeId tid =
+			TypeId("ns3::NodeIdTag").SetParent<Tag>().AddConstructor<
+					NodeIdTag>();
+	return tid;
+}
+TypeId NodeIdTag::GetInstanceTypeId(void) const {
+	return GetTypeId();
+}
+uint32_t NodeIdTag::GetSerializedSize(void) const {
+	return sizeof(uint32_t) * 3;
+}
+void NodeIdTag::Serialize(TagBuffer i) const {
+	i.WriteU32(id_pod);
+	i.WriteU32(id_switch);
+	i.WriteU32(id_level);
+}
+void NodeIdTag::Deserialize(TagBuffer i) {
+	id_pod = i.ReadU32();
+	id_switch = i.ReadU32();
+	id_level = i.ReadU32();
+}
+void NodeIdTag::Print(std::ostream &os) const {
+	os << "node id = " << id_pod << "," << id_switch << "," << id_level;
+}
+
 /*
  *uint32_t Id0;//used to do selfrouting
  *uint32_t Id1;//used to do selfrouting
@@ -86,7 +131,7 @@ uint32_t Node::GetIdlevel_FatTree(void) {
 	return Idlevel;
 }
 Node::Node() :
-		m_id(0), m_sid(0) , idTag(){
+		m_id(0), m_sid(0){
 	NS_LOG_FUNCTION (this);
 	Construct();
 }
