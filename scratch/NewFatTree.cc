@@ -166,6 +166,7 @@ int main(int argc, char *argv[]) {
 				//node_server.Get(
 //						i * (Port_num * Port_num / 4) + j * (Port_num / 2) + k)->SetId_FatTree(
 //						i, j, k); // labling the host server
+
 				serverNode->idTag = NodeIdTag(i,j,k);
 				node.Add(node_l2switch.Get(i * (Port_num / 2) + j));
 				link = p2p.Install(node);
@@ -280,11 +281,14 @@ int main(int argc, char *argv[]) {
 	LogComponentEnable("UdpEchoClientApplication", LOG_LEVEL_INFO);
 	LogComponentEnable("UdpEchoServerApplication", LOG_LEVEL_INFO);
 	UdpEchoServerHelper echoServer(9);
-	ApplicationContainer serverApps = echoServer.Install(node_server.Get(5));
+	ApplicationContainer serverApps = echoServer.Install(node_server.Get(4));
 	serverApps.Start(Seconds(1.0));
 	serverApps.Stop(Seconds(15.0));
 	std::cout << "server id is " << node_server.Get(5)->GetId() << std::endl;
-	UdpEchoClientHelper echoClient(Ipv4Address("10.0.193.17"), 9);
+	UdpEchoClientHelper echoClient(Ipv4Address("10.0.193.1"), 9);
+//	10.0.193.17  ip of node 5
+//	10.0.192.1 ip of node 0
+//	10.0.193.33 ip of node 6
 	echoClient.SetAttribute("MaxPackets", UintegerValue(1));
 	echoClient.SetAttribute("Interval", TimeValue(Seconds(1.0)));
 	echoClient.SetAttribute("PacketSize", UintegerValue(1024));
