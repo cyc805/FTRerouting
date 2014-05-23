@@ -322,7 +322,7 @@ void PointToPointNetDevice::Receive(Ptr<Packet> packet) {
 
 		/*----------------------------------Chunzhi------------------------------*/
 		Ptr<Node> node = this->GetNode();
-//		uint32_t nDevices = node->GetNDevices();
+		uint32_t nDevices = node->GetNDevices();
 
 		Ipv4Header ipHeader;
 		packet->PeekHeader(ipHeader);
@@ -337,14 +337,18 @@ void PointToPointNetDevice::Receive(Ptr<Packet> packet) {
 		DstIdTag nodeIdTag;
 		packet->PeekPacketTag(nodeIdTag);
 
-		bool isDeliverUp = nodeIdTag.id_pod == node->nodeId_FatTree.id_pod
+		// Server node has two NetDevices, one for self-loop and the other for communication with switch.
+		bool nodeIsServer = nDevices == 2;
+		bool isDeliverUp = nodeIsServer
+				&& nodeIdTag.id_pod == node->nodeId_FatTree.id_pod
 				&& nodeIdTag.id_switch == node->nodeId_FatTree.id_switch
 				&& nodeIdTag.id_level == node->nodeId_FatTree.id_level;
 
 		std::cout << "dst ip:" << ipHeader.GetDestination() << std::endl;
 		std::cout << "dst node tag: ";
 		nodeIdTag.Print(std::cout);
-		std::cout << "current node/switch tag: ";
+		std::string nodeType = nodeIsServer ? "server" : "switch";
+		std::cout << "current " << nodeType << " tag:";
 		node->nodeId_FatTree.Print(std::cout);
 
 		if (!isDeliverUp) { // forward to next hop
