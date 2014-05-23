@@ -39,10 +39,11 @@ namespace ns3 {
 
 NS_OBJECT_ENSURE_REGISTERED(Node);
 
+/*--------------------------------------------Chunzhi-----------------------------------*/
 NodeId::NodeId() {
-	this->id_pod = 0xffffffff;
-	this->id_switch = 0xffffffff;
-	this->id_level = 0xffffffff;
+	id_pod = 0xffffffff;
+	id_switch = 0xffffffff;
+	id_level = 0xffffffff;
 }
 
 NodeId::NodeId(uint32_t id_pod, uint32_t id_switch, uint32_t id_level) {
@@ -51,138 +52,105 @@ NodeId::NodeId(uint32_t id_pod, uint32_t id_switch, uint32_t id_level) {
 	this->id_level = id_level;
 }
 
+bool NodeId::operator ==(const NodeId other) const {
+	return id_pod == other.id_pod && id_switch == other.id_switch
+			&& id_level == other.id_level;
+}
+
 void NodeId::Print(std::ostream &os) {
 	os << "node tag id = " << id_pod << "," << id_switch << "," << id_level
 			<< std::endl;
 }
 
-SrcIdTag::SrcIdTag() :
-		Tag() {
-
-	id_pod = 0xffffffff;
-	id_switch = 0xffffffff;
-	id_level = 0xffffffff;
-
+IdTag::IdTag() :
+		NodeId() {
 }
-SrcIdTag::SrcIdTag(uint32_t id_pod_, uint32_t id_switch_, uint32_t id_level_) {
 
-	id_pod = id_pod_;
-	id_switch = id_switch_;
-	id_level = id_level_;
+IdTag::IdTag(uint32_t id_pod, uint32_t id_switch, uint32_t id_level) :
+		NodeId(id_pod, id_switch, id_level) {
+}
 
+TypeId IdTag::GetTypeId(void) {
+	static TypeId tid = TypeId("ns3::IdTag").SetParent<Tag>().AddConstructor<
+			IdTag>();
+	return tid;
+}
+TypeId IdTag::GetInstanceTypeId(void) const {
+	return GetTypeId();
+}
+uint32_t IdTag::GetSerializedSize(void) const {
+	return sizeof(uint32_t) * 3;
+}
+void IdTag::Serialize(TagBuffer i) const {
+	i.WriteU32(id_pod);
+	i.WriteU32(id_switch);
+	i.WriteU32(id_level);
+}
+void IdTag::Deserialize(TagBuffer i) {
+	id_pod = i.ReadU32();
+	id_switch = i.ReadU32();
+	id_level = i.ReadU32();
+}
+void IdTag::Print(std::ostream &os) const {
+	os << "node tag id = " << id_pod << "," << id_switch << "," << id_level
+			<< std::endl;
 }
 
 TypeId SrcIdTag::GetTypeId(void) {
-	static TypeId tid = TypeId("ns3::SrcIdTag").SetParent<Tag>().AddConstructor<
-			SrcIdTag>();
+	static TypeId tid =
+			TypeId("ns3::SrcIdTag").SetParent<IdTag>().AddConstructor<SrcIdTag>();
 	return tid;
 }
+
 TypeId SrcIdTag::GetInstanceTypeId(void) const {
 	return GetTypeId();
 }
-uint32_t SrcIdTag::GetSerializedSize(void) const {
-	return sizeof(uint32_t) * 3;
+
+SrcIdTag::SrcIdTag() :
+		IdTag() {
 }
-void SrcIdTag::Serialize(TagBuffer i) const {
-	i.WriteU32(id_pod);
-	i.WriteU32(id_switch);
-	i.WriteU32(id_level);
-}
-void SrcIdTag::Deserialize(TagBuffer i) {
-	id_pod = i.ReadU32();
-	id_switch = i.ReadU32();
-	id_level = i.ReadU32();
-}
-void SrcIdTag::Print(std::ostream &os) const {
-	os << "node tag id = " << id_pod << "," << id_switch << "," << id_level
-			<< std::endl;
+
+SrcIdTag::SrcIdTag(uint32_t id_pod, uint32_t id_switch, uint32_t id_level) :
+		IdTag(id_pod, id_switch, id_level) {
+
 }
 
 DstIdTag::DstIdTag() :
-		Tag() {
-
-	id_pod = 0xffffffff;
-	id_switch = 0xffffffff;
-	id_level = 0xffffffff;
+		IdTag() {
 
 }
-DstIdTag::DstIdTag(uint32_t id_pod_, uint32_t id_switch_, uint32_t id_level_) {
-
-	id_pod = id_pod_;
-	id_switch = id_switch_;
-	id_level = id_level_;
-
+DstIdTag::DstIdTag(uint32_t id_pod, uint32_t id_switch, uint32_t id_level) :
+		IdTag(id_pod, id_switch, id_level) {
 }
 
 TypeId DstIdTag::GetTypeId(void) {
-	static TypeId tid = TypeId("ns3::DstIdTag").SetParent<Tag>().AddConstructor<
-			DstIdTag>();
+	static TypeId tid =
+			TypeId("ns3::DstIdTag").SetParent<IdTag>().AddConstructor<DstIdTag>();
 	return tid;
 }
+
 TypeId DstIdTag::GetInstanceTypeId(void) const {
 	return GetTypeId();
 }
-uint32_t DstIdTag::GetSerializedSize(void) const {
-	return sizeof(uint32_t) * 3;
-}
-void DstIdTag::Serialize(TagBuffer i) const {
-	i.WriteU32(id_pod);
-	i.WriteU32(id_switch);
-	i.WriteU32(id_level);
-}
-void DstIdTag::Deserialize(TagBuffer i) {
-	id_pod = i.ReadU32();
-	id_switch = i.ReadU32();
-	id_level = i.ReadU32();
-}
-void DstIdTag::Print(std::ostream &os) const {
-	os << "node tag id = " << id_pod << "," << id_switch << "," << id_level
-			<< std::endl;
-}
 
 TurningIdTag::TurningIdTag() :
-		Tag() {
-
-	id_pod = 0xffffffff;
-	id_switch = 0xffffffff;
-	id_level = 0xffffffff;
-
+		IdTag() {
 }
-TurningIdTag::TurningIdTag(uint32_t id_pod_, uint32_t id_switch_,
-		uint32_t id_level_) {
-
-	id_pod = id_pod_;
-	id_switch = id_switch_;
-	id_level = id_level_;
-
+TurningIdTag::TurningIdTag(uint32_t id_pod, uint32_t id_switch,
+		uint32_t id_level) :
+		IdTag(id_pod, id_switch, id_level) {
 }
 
 TypeId TurningIdTag::GetTypeId(void) {
 	static TypeId tid =
-			TypeId("ns3::TurningIdTag").SetParent<Tag>().AddConstructor<
+			TypeId("ns3::TurningIdTag").SetParent<IdTag>().AddConstructor<
 					TurningIdTag>();
 	return tid;
 }
 TypeId TurningIdTag::GetInstanceTypeId(void) const {
 	return GetTypeId();
 }
-uint32_t TurningIdTag::GetSerializedSize(void) const {
-	return sizeof(uint32_t) * 3;
-}
-void TurningIdTag::Serialize(TagBuffer i) const {
-	i.WriteU32(id_pod);
-	i.WriteU32(id_switch);
-	i.WriteU32(id_level);
-}
-void TurningIdTag::Deserialize(TagBuffer i) {
-	id_pod = i.ReadU32();
-	id_switch = i.ReadU32();
-	id_level = i.ReadU32();
-}
-void TurningIdTag::Print(std::ostream &os) const {
-	os << "node tag id = " << id_pod << "," << id_switch << "," << id_level
-			<< std::endl;
-}
+/*----------------------------------------------------------------------------------------*/
 
 /*
  *uint32_t Id0;//used to do selfrouting
@@ -250,6 +218,10 @@ void Node::Construct(void) {
 
 Node::~Node() {
 	NS_LOG_FUNCTION (this);
+}
+
+bool Node::operator <(const Node other) const {
+	return GetId() < other.GetId();
 }
 
 uint32_t Node::GetId(void) const {

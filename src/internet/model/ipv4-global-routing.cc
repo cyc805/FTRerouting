@@ -64,8 +64,8 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE("Ipv4GlobalRouting");
 
-//std::map<Ipv4Address, Node> IpServerMap;
-std::map<Ipv4Address, NodeId> IpServerMap;
+std::map<Ptr<Node>, Ipv4Address> ServerIpMap;
+std::map<Ipv4Address, Ptr<Node> > IpServerMap;
 
 namespace ns3 {
 
@@ -412,8 +412,8 @@ Ptr<Ipv4Route> Ipv4GlobalRouting::RouteOutput(Ptr<Packet> p,
 	Ipv4Address dstIp = header.GetDestination();
 	Ipv4Address srcIp = header.GetDestination();
 
-	NodeId nodeId_dst = IpServerMap[dstIp];
-	NodeId nodeId_src = IpServerMap[srcIp];
+	NodeId nodeId_dst = IpServerMap[dstIp]->nodeId_FatTree;
+	NodeId nodeId_src = IpServerMap[srcIp]->nodeId_FatTree;
 	NodeId nodeId_turning;
 	// add a new destination node id tag to the packet.
 	p->AddPacketTag(
@@ -437,8 +437,8 @@ Ptr<Ipv4Route> Ipv4GlobalRouting::RouteOutput(Ptr<Packet> p,
 	}
 
 	p->AddPacketTag(
-				TurningIdTag(nodeId_turning.id_pod, nodeId_turning.id_switch,
-						nodeId_turning.id_level));
+			TurningIdTag(nodeId_turning.id_pod, nodeId_turning.id_switch,
+					nodeId_turning.id_level));
 //
 ////	// The journey of a packet, please refer to "http://www.nsnam.org/docs/release/3.10/manual/html/internet-stack.html"
 ////	// (1) if method "LookupGlobal" is called by "RouteOutput" (source sends out a packet), p may be a dummy packet (can be NULL??).
@@ -538,13 +538,13 @@ bool Ipv4GlobalRouting::RouteInput(Ptr<const Packet> p,
 	NS_LOG_LOGIC ("Unicast destination- looking up global route");
 
 	/*--------------------------------Chunzhi------------------------------*/
-	Ipv4Address srcIp = header.GetSource();
-	Ipv4Address dstIp = header.GetDestination();
-//	uint protocol = header.GetProtocol();
-//	uint16_t srcPort = 0;
-//	uint16_t dstPort = 0;
-	IpServerMap[srcIp].Print(std::cout);
-	IpServerMap[dstIp].Print(std::cout);
+//	Ipv4Address srcIp = header.GetSource();
+//	Ipv4Address dstIp = header.GetDestination();
+////	uint protocol = header.GetProtocol();
+////	uint16_t srcPort = 0;
+////	uint16_t dstPort = 0;
+//	IpServerMap[srcIp].Print(std::cout);
+//	IpServerMap[dstIp].Print(std::cout);
 	/*---------------------------------------------------------------------*/
 
 	Ptr<Ipv4Route> rtentry = LookupGlobal(header.GetDestination(), header, 0, p,

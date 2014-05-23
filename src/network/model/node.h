@@ -42,15 +42,18 @@ class Application;
 class Packet;
 class Address;
 
+/*------------------------------------------Chunzhi------------------------------*/
+
 class NodeId {
 public:
 	uint32_t id_pod, id_switch, id_level;
 	NodeId();
 	NodeId(uint32_t id_pod, uint32_t id_switch, uint32_t id_level);
 	void Print(std::ostream &os);
+	bool operator ==(const NodeId) const;
 };
 
-class SrcIdTag: public Tag {
+class IdTag: public Tag, public NodeId {
 public:
 	static TypeId GetTypeId(void);
 	virtual TypeId GetInstanceTypeId(void) const;
@@ -58,40 +61,34 @@ public:
 	virtual void Serialize(TagBuffer i) const;
 	virtual void Deserialize(TagBuffer i);
 	virtual void Print(std::ostream &os) const;
+	IdTag();
+	IdTag(uint32_t id_pod, uint32_t id_switch, uint32_t id_level);
+};
+
+class SrcIdTag: public IdTag {
+public:
+	static TypeId GetTypeId(void);
+	virtual TypeId GetInstanceTypeId(void) const;
 	SrcIdTag();
 	SrcIdTag(uint32_t id_pod, uint32_t id_switch, uint32_t id_level);
-
-	uint32_t id_pod, id_switch, id_level;
-
 };
-class DstIdTag: public Tag {
+
+class DstIdTag: public IdTag {
 public:
 	static TypeId GetTypeId(void);
 	virtual TypeId GetInstanceTypeId(void) const;
-	virtual uint32_t GetSerializedSize(void) const;
-	virtual void Serialize(TagBuffer i) const;
-	virtual void Deserialize(TagBuffer i);
-	virtual void Print(std::ostream &os) const;
 	DstIdTag();
 	DstIdTag(uint32_t id_pod, uint32_t id_switch, uint32_t id_level);
-
-	uint32_t id_pod, id_switch, id_level;
-
 };
-class TurningIdTag: public Tag {
+
+class TurningIdTag: public IdTag {
 public:
 	static TypeId GetTypeId(void);
 	virtual TypeId GetInstanceTypeId(void) const;
-	virtual uint32_t GetSerializedSize(void) const;
-	virtual void Serialize(TagBuffer i) const;
-	virtual void Deserialize(TagBuffer i);
-	virtual void Print(std::ostream &os) const;
 	TurningIdTag();
 	TurningIdTag(uint32_t id_pod, uint32_t id_switch, uint32_t id_level);
-
-	uint32_t id_pod, id_switch, id_level;
-
 };
+/*--------------------------------------------------------------------------------------------*/
 
 /**
  * \ingroup network
@@ -121,6 +118,12 @@ public:
 	Node(uint32_t systemId);
 
 	virtual ~Node();
+
+	/**
+	 * Add by Chunzhi
+	 * Add this function such that Node is hashable for std::map.
+	 */
+	bool operator <(const Node) const;
 
 	/**
 	 * \returns the unique id of this node.
@@ -252,7 +255,7 @@ public:
 	 */
 	void SetId_FatTree(uint32_t id0, uint32_t id1, uint32_t idlevel);
 
-	NodeId nodeId_FatTree;
+	NodeId nodeId_FatTree; // Chunzhi
 	/*
 	 * get the number of the specific id
 	 * para id, the possible value could be id0, id1, idlevel
@@ -304,6 +307,8 @@ private:
 
 } // namespace ns3
 
-extern std::map<Ipv4Address, NodeId> IpServerMap;
+//extern std::map<Ipv4Address, NodeId> IpServerMap;
+extern std::map<Ipv4Address, Ptr<Node> > IpServerMap;
+extern std::map<Ptr<Node>, Ipv4Address> ServerIpMap;
 
 #endif /* NODE_H */

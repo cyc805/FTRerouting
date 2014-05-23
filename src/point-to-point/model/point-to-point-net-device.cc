@@ -325,29 +325,32 @@ void PointToPointNetDevice::Receive(Ptr<Packet> packet) {
 
 		/*----------------------------------Chunzhi------------------------------*/
 		Ptr<Node> node = this->GetNode();
-//		uint32_t nDevices = node->GetNDevices();
+		uint32_t nDevices = node->GetNDevices();
 
 		Ipv4Header ipHeader;
 		packet->PeekHeader(ipHeader);
-		if (!(ipHeader.GetProtocol() == 6 || ipHeader.GetProtocol() == 17)) { // is not TCP(=6) or UDP(=17) packet
+		uint8_t upper_protocol = ipHeader.GetProtocol();
+		uint8_t p_UDP = 17, p_TCP = 6; // TCP=6; UDP=17
+		if (upper_protocol != p_UDP && upper_protocol != p_TCP) { // is not TCP(=6) or UDP(=17) packet
 			m_rxCallback(this, packet, protocol, GetRemote());
 
 			return;
 		}
-		std::cout << "L4 protocol = " << (uint32_t) ipHeader.GetProtocol()
-				<< std::endl;
+
+		NS_ASSERT(upper_protocol == p_UDP || upper_protocol == p_TCP);
 
 		DstIdTag nodeIdTag;
 		packet->PeekPacketTag(nodeIdTag);
 
-		bool isDeliverUp = nodeIdTag.id_pod == node->nodeId_FatTree.id_pod
-				&& nodeIdTag.id_switch == node->nodeId_FatTree.id_switch
-				&& nodeIdTag.id_level == node->nodeId_FatTree.id_level;
+		// Server node has two NetDevices, one for self-loop and the other for communication with switch.
+		bool nodeIsServer = nDevices == 2;
+		bool isDeliverUp = nodeIsServer && nodeIdTag == node->nodeId_FatTree;
 
 		std::cout << "dst ip:" << ipHeader.GetDestination() << std::endl;
 		std::cout << "dst node tag: ";
 		nodeIdTag.Print(std::cout);
-		std::cout << "current node/switch tag: ";
+		std::string nodeType = nodeIsServer ? "server" : "switch";
+		std::cout << "current " << nodeType << " tag:";
 		node->nodeId_FatTree.Print(std::cout);
 
 		if (!isDeliverUp) { // forward to next hop
