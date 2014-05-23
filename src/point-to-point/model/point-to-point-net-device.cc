@@ -34,10 +34,13 @@
 #include "ns3/node.h"
 #include "ns3/udp-l4-protocol.h"
 #include "ns3/tcp-l4-protocol.h"
+#include "src/network/model/node.h"
 
 NS_LOG_COMPONENT_DEFINE("PointToPointNetDevice");
 
 namespace ns3 {
+
+const int Port_num = 8;
 
 NS_OBJECT_ENSURE_REGISTERED(PointToPointNetDevice);
 
@@ -374,6 +377,77 @@ void PointToPointNetDevice::Receive(Ptr<Packet> packet) {
 		}
 	}
 }
+/*-------------------------------By Zhiyong-----------------------------------------------------*/
+uint32_t PointToPointNetDevice::NormalForwarding_FatTree(NodeId nodeId,
+		DstIdTag dstId, TurningIdTag turningId, uint32_t iif) {
+	uint32_t oif = 0;
+	if (nodeId.id_level == turningId.id_level) {
+		switch (nodeId.id_level) {
+		case 0:
+			oif = dstId.id_pod;
+			break;
+		case 1:
+			oif = dstId.id_switch;
+			break;
+		case 2:
+			oif = dstId.id_level;
+			break;
+		}
+	} else if ((nodeId.id_level > turningId.id_level)
+			&& (iif <= Port_num / 2)) {
+		switch (nodeId.id_level) {
+		case 1:
+			oif = Port_num / 2 + nodeId.id_switch;
+			break;
+
+		case 2:
+			oif = Port_num / 2 + nodeId.id_pod;
+			break;
+		}
+	} else if ((nodeId.id_level > turningId.id_level) && (iif > Port_num / 2)) {
+		switch (nodeId.id_level) {
+		case 1:
+			oif = dstId.id_switch;
+			break;
+		case 2:
+			oif = dstId.id_level;
+			break;
+		}
+	} else {
+		std::cout
+				<< " forwarding aglorithm error!!!  in the Point to Point Net Device"
+				<< std::endl;
+	}
+	return oif;
+}
+
+bool PointToPointNetDevice::IsForwarding_FatTree(NodeId nodeId, DstIdTag dstId,
+		uint32_t iif) {
+	if ((nodeId.id_level == 0) && (iif == dstId.id_pod)) {
+		return false;
+	}
+
+	else if ((iif > Port_num / 2) && (nodeId.id_pod != dstId.id_pod)) {
+		return false;
+	} else
+		return true;
+}
+uint32_t PointToPointNetDevice::Forwarding_FatTree(NodeId nodeId,
+		DstIdTag dstId, SrcIdTag srcId, TurningIdTag turningId, uint32_t iif){
+	uint32_t oif =0;
+	if (IsForwarding_FatTree(nodeId, dstId, iif)){
+		oif = NormalForwarding_FatTree(nodeId, dstId, turningId, iif);
+	}
+	else{
+		switch(nodeId.id_level){
+		case 0:
+			oif = NormalForwarding_FatTree(nodeId, srcId, turningId, iif);///////////
+		}
+	}
+
+	return oif;
+}
+/*-------------------------------------------------------------------------------------------*/
 
 Ptr<Queue> PointToPointNetDevice::GetQueue(void) const {
 	NS_LOG_FUNCTION_NOARGS ();
