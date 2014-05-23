@@ -59,11 +59,11 @@ class PointToPointNetDevice: public NetDevice {
 public:
 	static TypeId GetTypeId(void);
 
-	uint32_t NormalForwarding_FatTree(NodeId nodeId, DstIdTag dstId,
-			TurningIdTag turningId, uint32_t iif);
+	uint32_t NormalForwarding_FatTree(NodeId nodeId, IdTag dstId,
+		IdTag turningId, uint32_t iif);
 	bool IsForwarding_FatTree(NodeId nodeId, DstIdTag dstId, uint32_t iif);
-	uint32_t PointToPointNetDevice::Forwarding_FatTree(NodeId nodeId,
-			DstIdTag dstId, SrcIdTag srcId, TurningIdTag turningId, uint32_t iif);
+	uint32_t Forwarding_FatTree(NodeId nodeId, DstIdTag dstId, SrcIdTag srcId,
+			TurningIdTag turningId, uint32_t iif);
 
 	/**
 	 * Construct a PointToPointNetDevice

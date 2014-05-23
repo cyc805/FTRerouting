@@ -410,7 +410,8 @@ Ptr<Ipv4Route> Ipv4GlobalRouting::RouteOutput(Ptr<Packet> p,
 	/**--------------------Chunzhi------------------------**/
 
 	Ipv4Address dstIp = header.GetDestination();
-	Ipv4Address srcIp = header.GetDestination();
+	Ipv4Address srcIp = header.GetSource();
+	std::cout<<dstIp<<"::"<<srcIp<<std::endl;
 
 	NodeId nodeId_dst = IpServerMap[dstIp]->nodeId_FatTree;
 	NodeId nodeId_src = IpServerMap[srcIp]->nodeId_FatTree;

@@ -382,7 +382,7 @@ void PointToPointNetDevice::Receive(Ptr<Packet> packet) {
 }
 /*-------------------------------By Zhiyong-----------------------------------------------------*/
 uint32_t PointToPointNetDevice::NormalForwarding_FatTree(NodeId nodeId,
-		DstIdTag dstId, TurningIdTag turningId, uint32_t iif) {
+		IdTag dstId, IdTag turningId, uint32_t iif) {
 	uint32_t oif = 0;
 	if (nodeId.id_level == turningId.id_level) {
 		switch (nodeId.id_level) {
@@ -444,7 +444,12 @@ uint32_t PointToPointNetDevice::Forwarding_FatTree(NodeId nodeId,
 	else{
 		switch(nodeId.id_level){
 		case 0:
-			oif = NormalForwarding_FatTree(nodeId, srcId, turningId, iif);///////////
+			oif = NormalForwarding_FatTree(nodeId, srcId, turningId, iif);
+			break;
+		case 1:
+			if(nodeId.id_pod == dstId.id_pod){
+				oif = NormalForwarding_FatTree(nodeId, srcId, turningId, iif);////TODO
+			}
 		}
 	}
 
