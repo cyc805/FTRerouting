@@ -30,8 +30,8 @@
 using namespace ns3;
 using namespace std;
 
-std::map<Ipv4Address, NodeId> IpServerMap;
-//std::map<Ipv4Address, Node> IpServerMap;
+std::map<Ptr<Node>, Ipv4Address> ServerIpMap;
+std::map<Ipv4Address, Ptr<Node> > IpServerMap;
 
 const int Port_num = 8; // set the switch number
 /**
@@ -175,10 +175,9 @@ int main(int argc, char *argv[]) {
 				//std::cout<< "assign ip is "<< Ipv4Address(ip1)<<std::endl;
 				address.SetBase(Ipv4Address(ip1), "255.255.255.248");
 				server_ip = address.Assign(link);
-				IpServerMap[server_ip.GetAddress(0)] =
-						serverNode->nodeId_FatTree;
-//				std::cout << IpServerMap[Ipv4Address("10.0.0.1")].GetId()
-//						<< std::endl;
+
+				ServerIpMap[serverNode] = server_ip.GetAddress(0);
+				IpServerMap[server_ip.GetAddress(0)] = serverNode;
 			}
 
 		}
