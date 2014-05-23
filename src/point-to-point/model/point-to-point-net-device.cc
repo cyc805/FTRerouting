@@ -339,16 +339,23 @@ void PointToPointNetDevice::Receive(Ptr<Packet> packet) {
 
 		NS_ASSERT(upper_protocol == p_UDP || upper_protocol == p_TCP);
 
-		DstIdTag nodeIdTag;
-		packet->PeekPacketTag(nodeIdTag);
+		SrcIdTag srcIdTag;
+		packet->PeekPacketTag(srcIdTag);
+		DstIdTag dstIdTag;
+		packet->PeekPacketTag(dstIdTag);
+		TurningIdTag turningIdTag;
+		packet->PeekPacketTag(turningIdTag);
 
 		// Server node has two NetDevices, one for self-loop and the other for communication with switch.
 		bool nodeIsServer = nDevices == 2;
-		bool isDeliverUp = nodeIsServer && nodeIdTag == node->nodeId_FatTree;
-
+		bool isDeliverUp = nodeIsServer && dstIdTag == node->nodeId_FatTree;
 		std::cout << "dst ip:" << ipHeader.GetDestination() << std::endl;
+		std::cout << "src node tag: ";
+		srcIdTag.Print(std::cout);
 		std::cout << "dst node tag: ";
-		nodeIdTag.Print(std::cout);
+		dstIdTag.Print(std::cout);
+		std::cout << "turing switch node tag: ";
+		turningIdTag.Print(std::cout);
 		std::string nodeType = nodeIsServer ? "server" : "switch";
 		std::cout << "current " << nodeType << " tag:";
 		node->nodeId_FatTree.Print(std::cout);
@@ -357,8 +364,11 @@ void PointToPointNetDevice::Receive(Ptr<Packet> packet) {
 
 			std::cout << "forward" << std::endl;
 
-			uint32_t oifIndex = 1; //TODO
+			uint32_t oifIndex = NormalForwarding_FatTree(node->nodeId_FatTree,
+					dstIdTag, turningIdTag, this->GetIfIndex()); //TODO
+//			uint32_t oifIndex = 1;
 
+//			std::cout<<"oif = " <<oifIndex <<std::endl;
 			NS_ASSERT(node->GetDevice(oifIndex) != this);
 
 			Address useless;
@@ -383,6 +393,11 @@ void PointToPointNetDevice::Receive(Ptr<Packet> packet) {
 /*-------------------------------By Zhiyong-----------------------------------------------------*/
 uint32_t PointToPointNetDevice::NormalForwarding_FatTree(NodeId nodeId,
 		DstIdTag dstId, TurningIdTag turningId, uint32_t iif) {
+	std::cout << "iif = " << iif << std::endl;
+	std::cout << "dstID = ";
+	dstId.Print(std::cout);
+	std::cout << "nodeid level, turning Id level" << nodeId.id_level << ","
+			<< turningId.id_level << std::endl;
 	uint32_t oif = 0;
 	if (nodeId.id_level == turningId.id_level) {
 		switch (nodeId.id_level) {
@@ -421,6 +436,9 @@ uint32_t PointToPointNetDevice::NormalForwarding_FatTree(NodeId nodeId,
 				<< " forwarding aglorithm error!!!  in the Point to Point Net Device"
 				<< std::endl;
 	}
+	oif++;
+	std::cout << "oif = " << oif << std::endl;
+
 	return oif;
 }
 
@@ -436,16 +454,15 @@ bool PointToPointNetDevice::IsForwarding_FatTree(NodeId nodeId, DstIdTag dstId,
 		return true;
 }
 uint32_t PointToPointNetDevice::Forwarding_FatTree(NodeId nodeId,
-		DstIdTag dstId, SrcIdTag srcId, TurningIdTag turningId, uint32_t iif){
-	uint32_t oif =0;
-	if (IsForwarding_FatTree(nodeId, dstId, iif)){
+		DstIdTag dstId, SrcIdTag srcId, TurningIdTag turningId, uint32_t iif) {
+	uint32_t oif = 0;
+	if (IsForwarding_FatTree(nodeId, dstId, iif)) {
 		oif = NormalForwarding_FatTree(nodeId, dstId, turningId, iif);
-	}
-	else{
-		switch(nodeId.id_level){
-		case 0:
-			oif = NormalForwarding_FatTree(nodeId, srcId, turningId, iif);///////////
-		}
+	} else {
+//		switch (nodeId.id_level) {
+//		case 0:
+//			oif = NormalForwarding_FatTree(nodeId, srcId, turningId, iif); ///////////
+//		}
 	}
 
 	return oif;

@@ -62,7 +62,7 @@ public:
 	uint32_t NormalForwarding_FatTree(NodeId nodeId, DstIdTag dstId,
 			TurningIdTag turningId, uint32_t iif);
 	bool IsForwarding_FatTree(NodeId nodeId, DstIdTag dstId, uint32_t iif);
-	uint32_t PointToPointNetDevice::Forwarding_FatTree(NodeId nodeId,
+	uint32_t Forwarding_FatTree(NodeId nodeId,
 			DstIdTag dstId, SrcIdTag srcId, TurningIdTag turningId, uint32_t iif);
 
 	/**
