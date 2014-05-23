@@ -407,6 +407,7 @@ Ptr<Ipv4Route> Ipv4GlobalRouting::RouteOutput(Ptr<Packet> p,
 		Socket::SocketErrno &sockerr) {
 	NS_LOG_FUNCTION (this << p << &header << oif << &sockerr);
 
+
 	/**--------------------Chunzhi------------------------**/
 
 	Ipv4Address dstIp = header.GetDestination();
@@ -460,7 +461,7 @@ Ptr<Ipv4Route> Ipv4GlobalRouting::RouteOutput(Ptr<Packet> p,
 //
 //	std::cout << srcIp << dstIp << protocol << srcPort << dstPort << std::endl;
 
-	/*-----------------------------------------------------------------*/
+
 
 //
 // First, see if this is a multicast packet we have a route for.  If we

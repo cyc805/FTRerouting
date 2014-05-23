@@ -255,7 +255,10 @@ public:
 	 */
 	void SetId_FatTree(uint32_t id0, uint32_t id1, uint32_t idlevel);
 
+	/*-----------------------------------------Chunzhi------------------------------*/
 	NodeId nodeId_FatTree; // Chunzhi
+	/*------------------------------------------------------------------------------*/
+
 	/*
 	 * get the number of the specific id
 	 * para id, the possible value could be id0, id1, idlevel
