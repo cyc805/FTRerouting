@@ -408,58 +408,6 @@ Ptr<Ipv4Route> Ipv4GlobalRouting::RouteOutput(Ptr<Packet> p,
 	NS_LOG_FUNCTION (this << p << &header << oif << &sockerr);
 
 
-	/**--------------------Chunzhi------------------------**/
-
-	Ipv4Address dstIp = header.GetDestination();
-	Ipv4Address srcIp = header.GetSource();
-	std::cout<<dstIp<<"::"<<srcIp<<std::endl;
-
-	NodeId nodeId_dst = IpServerMap[dstIp]->nodeId_FatTree;
-	NodeId nodeId_src = IpServerMap[srcIp]->nodeId_FatTree;
-	NodeId nodeId_turning;
-	// add a new destination node id tag to the packet.
-	p->AddPacketTag(
-			DstIdTag(nodeId_dst.id_pod, nodeId_dst.id_switch,
-					nodeId_dst.id_level));
-	p->AddPacketTag(
-			SrcIdTag(nodeId_src.id_pod, nodeId_src.id_switch,
-					nodeId_src.id_level));
-	if (nodeId_dst.id_pod != nodeId_src.id_pod) {
-		nodeId_turning.id_level = 0;
-		nodeId_turning.id_pod = 0xffffffff;
-		nodeId_turning.id_switch = 0xffffffff;
-	} else if (nodeId_dst.id_switch != nodeId_src.id_switch) {
-		nodeId_turning.id_level = 1;
-		nodeId_turning.id_pod = 0xffffffff;
-		nodeId_turning.id_switch = 0xffffffff;
-	} else {
-		nodeId_turning.id_level = 2;
-		nodeId_turning.id_pod = 0xffffffff;
-		nodeId_turning.id_switch = 0xffffffff;
-	}
-
-	p->AddPacketTag(
-			TurningIdTag(nodeId_turning.id_pod, nodeId_turning.id_switch,
-					nodeId_turning.id_level));
-//
-////	// The journey of a packet, please refer to "http://www.nsnam.org/docs/release/3.10/manual/html/internet-stack.html"
-////	// (1) if method "LookupGlobal" is called by "RouteOutput" (source sends out a packet), p may be a dummy packet (can be NULL??).
-////	// (2) if method "LookupGlobal" is called by "RouteInput" (does forwarding process upon received packet), p has TCP/UDP header.
-////	if (p != NULL) { // for safety
-////		if (protocol == ns3::UdpL4Protocol::PROT_NUMBER) {
-////			UdpHeader udpHeader;
-////			p->PeekHeader(udpHeader);
-////			srcPort = udpHeader.GetSourcePort();
-////			dstPort = udpHeader.GetDestinationPort();
-////		} else if (protocol == ns3::TcpL4Protocol::PROT_NUMBER) {
-////			TcpHeader tcpHeader;
-////			p->PeekHeader(tcpHeader);
-////			srcPort = tcpHeader.GetSourcePort();
-////			dstPort = tcpHeader.GetDestinationPort();
-////		}
-////	}
-//
-//	std::cout << srcIp << dstIp << protocol << srcPort << dstPort << std::endl;
 
 
 
