@@ -393,7 +393,7 @@ void PointToPointNetDevice::Receive(Ptr<Packet> packet) {
 /*-------------------------------By Zhiyong-----------------------------------------------------*/
 uint32_t PointToPointNetDevice::NormalForwarding_FatTree(NodeId nodeId,
 
-		IdTag dstId, IdTag turningId, uint32_t iif) {
+IdTag dstId, IdTag turningId, uint32_t iif) {
 
 	std::cout << "iif = " << iif << std::endl;
 	std::cout << "dstID = ";
@@ -405,41 +405,50 @@ uint32_t PointToPointNetDevice::NormalForwarding_FatTree(NodeId nodeId,
 	if (nodeId.id_level == turningId.id_level) {
 		switch (nodeId.id_level) {
 		case 0:
-			oif = dstId.id_pod;
+			oif = dstId.id_pod + 1;
 			break;
 		case 1:
-			oif = dstId.id_switch;
+			oif = dstId.id_switch + 1;
 			break;
 		case 2:
-			oif = dstId.id_level;
+			oif = dstId.id_level + 1;
 			break;
 		}
 	} else if ((nodeId.id_level > turningId.id_level)
 			&& (iif <= Port_num / 2)) {
 		switch (nodeId.id_level) {
 		case 1:
-			oif = Port_num / 2 + nodeId.id_switch;
+//			if (nodeId.id_switch / (Port_num / 2) == 0) {
+//				oif = nodeId.id_switch / (Port_num / 2) + Port_num / 2 + 1;
+//			} else
+				oif = nodeId.id_switch / (Port_num / 2) + Port_num / 2 +1;
+//			oif = iif +Port_num/2;
 			break;
 
 		case 2:
-			oif = Port_num / 2 + nodeId.id_pod;
+//			if (nodeId.id_switch / (Port_num / 2) == 0) {
+//				oif = nodeId.id_pod / (Port_num / 2) + Port_num / 2 + 1;
+//			} else
+				oif = nodeId.id_pod / (Port_num / 2) + Port_num / 2 +1;
+//			oif = iif +Port_num/2;
 			break;
 		}
 	} else if ((nodeId.id_level > turningId.id_level) && (iif > Port_num / 2)) {
 		switch (nodeId.id_level) {
 		case 1:
-			oif = dstId.id_switch;
+			oif = dstId.id_switch + 1;
 			break;
 		case 2:
-			oif = dstId.id_level;
+			oif = dstId.id_level + 1;
 			break;
+
 		}
 	} else {
 		std::cout
 				<< " forwarding aglorithm error!!!  in the Point to Point Net Device"
 				<< std::endl;
 	}
-	oif++;
+//	oif++;
 	std::cout << "oif = " << oif << std::endl;
 
 	return oif;
@@ -462,21 +471,17 @@ uint32_t PointToPointNetDevice::Forwarding_FatTree(NodeId nodeId,
 	if (IsForwarding_FatTree(nodeId, dstId, iif)) {
 		oif = NormalForwarding_FatTree(nodeId, dstId, turningId, iif);
 
-	}
-	else{
-		switch(nodeId.id_level){
+	} else {
+		switch (nodeId.id_level) {
 		case 0:
 			oif = NormalForwarding_FatTree(nodeId, srcId, turningId, iif);
 			break;
 		case 1:
-			if(nodeId.id_pod == dstId.id_pod){
-				oif = NormalForwarding_FatTree(nodeId, srcId, turningId, iif);////TODO
+			if (nodeId.id_pod == dstId.id_pod) {
+				oif = NormalForwarding_FatTree(nodeId, srcId, turningId, iif); ////TODO
 			}
 		}
 	}
-
-
-
 
 	return oif;
 }
