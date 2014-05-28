@@ -204,37 +204,20 @@ int main(int argc, char *argv[]) {
 	}  //end of the connections construct between l2 switches and l1 switches
 	   // Now connect the core switches and the l2 switches
 
-	int Pod[Port_num][Port_num * Port_num / 4] =
-//	int Pod0[16] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
-//	int Pod1[16] = { 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16 };
-//	int Pod2[16] = { 1, 6, 12, 15, 2, 5, 11, 16, 3, 8, 10, 13, 4, 7, 9, 14 };
-//	int Pod3[16] = { 1, 7, 10, 16, 2, 8, 9, 15, 3, 5, 12, 14, 4, 6, 11, 13 };
-//	int Pod4[16] = { 1, 8, 11, 14, 2, 7, 12, 13, 3, 6, 9, 16, 4, 5, 10, 15 };
-//	int Pod5[16] = { 1, 5, 10, 13, 2, 6, 9, 14, 3, 7, 12, 15, 4, 8, 11, 16 };
-//	int Pod6[16] = { 1, 5, 11, 13, 2, 6, 12, 14, 3, 7, 9, 15, 4, 8, 10, 16 };
-//	int Pod7[16] = { 1, 5, 12, 13, 2, 6, 11, 14, 3, 7, 10, 15, 4, 8, 9, 16 };
-			{ { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }, { 1, 5,
-					9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16 }, { 1, 6,
-					12, 15, 2, 5, 11, 16, 3, 8, 10, 13, 4, 7, 9, 14 }, { 1, 7,
-					10, 16, 2, 8, 9, 15, 3, 5, 12, 14, 4, 6, 11, 13 }, { 1, 8,
-					11, 14, 2, 7, 12, 13, 3, 6, 9, 16, 4, 5, 10, 15 }, { 1, 5,
-					10, 13, 2, 6, 9, 14, 3, 7, 12, 15, 4, 8, 11, 16 }, { 1, 5,
-					11, 13, 2, 6, 12, 14, 3, 7, 9, 15, 4, 8, 10, 16 }, { 1, 5,
-					12, 13, 2, 6, 11, 14, 3, 7, 10, 15, 4, 8, 9, 16 } };
-//	int **Pod = new int *[Port_num];
-//	for (int i = 0; i < Port_num; i++) {
-//		Pod[i] = new int[Port_num * Port_num / 4];
-//	}
-//	Pod[0] = Pod0;
-//	Pod[1] = Pod1;
-//	Pod[2] = Pod2;
-//	Pod[3] = Pod3;
-//	Pod[4] = Pod4;
-//	Pod[5] = Pod5;
-//	Pod[6] = Pod6;
-//	Pod[7] = Pod7;
-//
+	int Pod[Port_num][Port_num * Port_num / 4] = { { 1, 2, 3, 4, 5, 6, 7, 8, 9,
+			10, 11, 12, 13, 14, 15, 16 }, { 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+			13, 14, 15, 16, 1 }, { 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+			16, 1, 2 },
+			{ 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 1, 2, 3 }, { 1, 5,
+					9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16 }, { 5, 9,
+					13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16, 1 }, { 9, 13,
+					2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16, 1, 5 }, { 13, 2,
+					6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16, 1, 5, 9 } };
 
+//	int Pod[Port_num][Port_num * Port_num / 4] = {
+//			{ 1, 2, 3, 4, 5, 6, 7, 8, 9 }, { 2, 3, 4, 5, 6, 7, 8, 9, 1 }, { 3,
+//					4, 5, 6, 7, 8, 9, 1, 2 }, { 1, 4, 7, 2, 5, 8, 3, 6, 9 }, {
+//					4, 7, 2, 5, 8, 3, 6, 9, 1 }, { 7, 2, 5, 8, 3, 6, 9, 1, 4 } };
 	int temp = 0;
 	for (int i = 0; i < Port_num; i++)	//cycling among the pods
 			{
@@ -266,27 +249,25 @@ int main(int argc, char *argv[]) {
 			node_l0switch.Get(i * (Port_num / 2) + j)->SetId_FatTree(i, j, 0);
 		}
 	}
+	/*--------------------------verify the ID---------------------------------------*/
+//	for (int i = 0; i < (Port_num * Port_num * Port_num / 4); i++) //show the server ID
+//			{
+//		std::cout << "the ID for the server is";
+//		node_server.Get(i)->nodeId_FatTree.Print(std::cout);
+//	}
+//	for (int i = 0; i < (Port_num * Port_num / 2); i++) //show the l1switch and l2switch ID
+//			{
+//		std::cout << "the ID for the l1switch is";
+//		node_l1switch.Get(i)->nodeId_FatTree.Print(std::cout);
+//
+//		std::cout << "the ID for the l2switch is";
+//		node_l2switch.Get(i)->nodeId_FatTree.Print(std::cout);
+//	}
+//	for (int i = 0; i < (Port_num * Port_num / 4); i++) {
+//		std::cout << "the ID for the l0switch is";
+//		node_l0switch.Get(i)->nodeId_FatTree.Print(std::cout);
+//	}
 
-	for (int i = 0; i < (Port_num * Port_num * Port_num / 4); i++) //show the server ID
-			{
-		std::cout << "the ID for the server is";
-		node_server.Get(i)->nodeId_FatTree.Print(std::cout);
-	}
-	for (int i = 0; i < (Port_num * Port_num / 2); i++) //show the l1switch and l2switch ID
-			{
-		std::cout << "the ID for the l1switch is";
-		node_l1switch.Get(i)->nodeId_FatTree.Print(std::cout);
-
-		std::cout << "the ID for the l2switch is";
-		node_l2switch.Get(i)->nodeId_FatTree.Print(std::cout);
-	}
-	for (int i = 0; i < (Port_num * Port_num / 4); i++) {
-		std::cout << "the ID for the l0switch is";
-		node_l0switch.Get(i)->nodeId_FatTree.Print(std::cout);
-	}
-
-	//uint32_t id = node_l2switch.Get(5)->GetNDevices();
-	///std::cout << "id = " << id <<std::endl;
 	Ipv4GlobalRoutingHelper::PopulateRoutingTables();
 	//printRoutingTable(node_l1switch.Get(0));
 	//printRoutingTable(node_l2switch.Get(5));
@@ -307,17 +288,14 @@ int main(int argc, char *argv[]) {
 	echoClient.SetAttribute("MaxPackets", UintegerValue(1));
 	echoClient.SetAttribute("Interval", TimeValue(Seconds(1.0)));
 	echoClient.SetAttribute("PacketSize", UintegerValue(1024));
-	ApplicationContainer clientApps = echoClient.Install(node_server.Get(90));
+	ApplicationContainer clientApps = echoClient.Install(node_server.Get(32));
 	clientApps.Start(Seconds(2.0));
 	clientApps.Stop(Seconds(10.0));
 
 	Simulator::Stop(Seconds(20.0));
 	Simulator::Run();
 	Simulator::Destroy();
-//	for (int i = 0; i < Port_num; i++) {
-//		delete []Pod[i];
-//		//Pod[i] = NULL;
-//	}
+
 //	delete []Pod;
 //	//Pod = NULL;
 

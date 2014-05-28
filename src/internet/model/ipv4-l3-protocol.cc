@@ -670,8 +670,8 @@ namespace ns3 {
                     SrcIdTag(nodeId_src.id_pod, nodeId_src.id_switch,
                     nodeId_src.id_level));
 
-            nodeId_turning.id_pod = 0xffffffff;
-            nodeId_turning.id_switch = 0xffffffff;
+            nodeId_turning.id_pod = 0;//TODO
+            nodeId_turning.id_switch = 0;//TODO
             if (nodeId_dst.id_pod != nodeId_src.id_pod) {
                 nodeId_turning.id_level = 0;
             } else if (nodeId_dst.id_switch != nodeId_src.id_switch) {

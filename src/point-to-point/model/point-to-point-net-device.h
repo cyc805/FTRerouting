@@ -63,8 +63,7 @@ public:
 		IdTag turningId, uint32_t iif);
 	bool IsForwarding_FatTree(NodeId nodeId, DstIdTag dstId, uint32_t iif);
 
-	uint32_t Forwarding_FatTree(NodeId nodeId, DstIdTag dstId, SrcIdTag srcId,
-			TurningIdTag turningId, uint32_t iif);
+	uint32_t Forwarding_FatTree(const  Packet & packet, uint32_t iif);
 
 
 	/**
