@@ -371,13 +371,13 @@ void PointToPointNetDevice::Receive(Ptr<Packet> packet) {
 
 			std::cout << "forward" << std::endl;
 
-			uint32_t oifIndex = NormalForwarding_FatTree(node->nodeId_FatTree,
-					dstIdTag, turningIdTag, this->GetIfIndex()); //TODO
-			//			uint32_t oifIndex = 1;
+			uint32_t oifIndex = Forwarding_FatTree(packet, this->GetIfIndex());
+			//			uint32_t oifIndex = 1;Forwarding_FatTree(const  Packet & packet, uint32_t iif)
 
 			//			std::cout<<"oif = " <<oifIndex <<std::endl;
+			if( IsForwarding_FatTree(this->GetNode()->nodeId_FatTree, dstIdTag, this->GetIfIndex())){
 			NS_ASSERT(node->GetDevice(oifIndex) != this);
-
+			}
 			Address useless;
 			PointToPointNetDevice* oif =
 					dynamic_cast<PointToPointNetDevice*>(&(*node->GetDevice(
@@ -503,14 +503,20 @@ IdTag dstId, IdTag turningId, uint32_t iif) {
 				<< std::endl;
 	}
 	//	oif++;
-	std::cout << "oif = " << oif << std::endl;
+//	std::cout << "oif = " << oif << std::endl;
 
 	return oif;
 }
 
 bool PointToPointNetDevice::IsForwarding_FatTree(NodeId nodeId, DstIdTag dstId,
-		uint32_t iif) {
-	if ((nodeId.id_level == 0) && (iif == dstId.id_pod)) {
+		uint32_t iif, NodeId FailNode) {
+
+//	nodeId.Print(std::cout);
+//	dstId.Print(std::cout);
+//	std::cout<<"iif = " <<iif<<std::endl;
+	if(this->GetNode()->nodeId_FatTree == FailNode)
+		return false;
+	else if ((nodeId.id_level == 0) && ((iif-1) == dstId.id_pod)) { // iif starts from 1, but podId start from 0.
 		return false;
 	} else if ((iif > Port_num / 2) && (nodeId.id_pod != dstId.id_pod)) {
 		return false;
@@ -518,24 +524,28 @@ bool PointToPointNetDevice::IsForwarding_FatTree(NodeId nodeId, DstIdTag dstId,
 		return true;
 }
 
-uint32_t PointToPointNetDevice::Forwarding_FatTree(const  Packet & packet, uint32_t iif) {
+uint32_t PointToPointNetDevice::Forwarding_FatTree(Ptr<Packet> packet, uint32_t iif) {
 	uint32_t oif = 0;
 	SrcIdTag srcId;
-	packet.PeekPacketTag(srcId);
+	packet->PeekPacketTag(srcId);
 	DstIdTag dstId;
-	packet.PeekPacketTag(dstId);
+	packet->PeekPacketTag(dstId);
 	TurningIdTag turningId;
-	packet.PeekPacketTag(turningId);
+	packet->PeekPacketTag(turningId);
 	NodeId nodeId = this->GetNode()->nodeId_FatTree;
 	if (IsForwarding_FatTree(nodeId, dstId, iif)) {
+		std::cout<<"ture\n";
 		oif = NormalForwarding_FatTree(nodeId, dstId, turningId, iif);
-
+		std::cout<<"oif = "<<oif <<std::endl;
 	} else {
+//		nodeId.Print(std::cout);
+		std::cout<<"false\n";
 		switch (nodeId.id_level) {
 		case 0: //go back to the source.
 			oif = NormalForwarding_FatTree(nodeId, srcId, turningId, iif);
 			break;
 		case 1:
+
 			if (nodeId.id_pod == dstId.id_pod) //go back to the source.
 				oif = NormalForwarding_FatTree(nodeId, srcId, turningId, Port_num/2);
 			else if (nodeId.id_pod == srcId.id_pod){  // find the ReRouting output port.
@@ -547,6 +557,13 @@ uint32_t PointToPointNetDevice::Forwarding_FatTree(const  Packet & packet, uint3
 				}
 				//TODO record the new path
 			break;
+//		case 2:
+//			oif = NormalForwarding_FatTree(nodeId, dstId, turningId, iif);
+//			if (oif >= Port_num)
+//				oif--;
+//			else
+//				oif++;
+//			break;
 		default:
 			std::cout<<"error in point-to point-net-device.h->PointToPointNetDevice::Forwarding_FatTree\n";
 			break;

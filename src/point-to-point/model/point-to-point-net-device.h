@@ -61,9 +61,9 @@ public:
 
 	uint32_t NormalForwarding_FatTree(NodeId nodeId, IdTag dstId,
 		IdTag turningId, uint32_t iif);
-	bool IsForwarding_FatTree(NodeId nodeId, DstIdTag dstId, uint32_t iif);
+	bool IsForwarding_FatTree(NodeId nodeId, DstIdTag dstId, uint32_t iif, NodeId FailNode = NodeId(0,0,1));
 
-	uint32_t Forwarding_FatTree(const  Packet & packet, uint32_t iif);
+	uint32_t Forwarding_FatTree(Ptr<Packet> packet, uint32_t iif);
 
 
 	/**
