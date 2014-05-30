@@ -277,9 +277,9 @@ int main(int argc, char *argv[]) {
 	LogComponentEnable("UdpEchoClientApplication", LOG_LEVEL_INFO);
 	LogComponentEnable("UdpEchoServerApplication", LOG_LEVEL_INFO);
 	UdpEchoServerHelper echoServer(9);
-	ApplicationContainer serverApps = echoServer.Install(node_server.Get(5));
-	serverApps.Start(Seconds(1.0));
-	serverApps.Stop(Seconds(15.0));
+//	ApplicationContainer serverApps = echoServer.Install(node_server.Get(5));
+//	serverApps.Start(Seconds(1.0));
+//	serverApps.Stop(Seconds(15.0));
 	std::cout << "server id is " << node_server.Get(5)->GetId() << std::endl;
 	UdpEchoClientHelper echoClient(Ipv4Address("10.0.193.17"), 9);
 //	10.0.193.17  ip of node 5
@@ -289,8 +289,11 @@ int main(int argc, char *argv[]) {
 	echoClient.SetAttribute("Interval", TimeValue(Seconds(1.0)));
 	echoClient.SetAttribute("PacketSize", UintegerValue(1024));
 	ApplicationContainer clientApps = echoClient.Install(node_server.Get(32));
+	ApplicationContainer clientApps2 = echoClient.Install(node_server.Get(32));
 	clientApps.Start(Seconds(2.0));
 	clientApps.Stop(Seconds(10.0));
+	clientApps2.Start(Seconds(6.0));
+	clientApps2.Stop(Seconds(10.0));
 
 	Simulator::Stop(Seconds(20.0));
 	Simulator::Run();
