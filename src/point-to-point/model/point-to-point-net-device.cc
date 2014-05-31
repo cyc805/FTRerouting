@@ -324,6 +324,7 @@ void PointToPointNetDevice::Receive(Ptr<Packet> packet) {
 		m_macRxTrace(packet);
 
 		/*----------------------------------Chunzhi------------------------------*/
+		std::cout << std::endl;
 		Ptr<Node> node = this->GetNode();
 		uint32_t nDevices = node->GetNDevices();
 
@@ -559,8 +560,9 @@ uint32_t PointToPointNetDevice::Forwarding_FatTree(Ptr<Packet> packet,
 	std::map<std::string, uint32_t>* reRoutingMap =
 			&this->GetNode()->reRoutingMap;
 	if (reRoutingMap->find(reRoutingKey) != reRoutingMap->end()) {
-		std::cout << "*********************I am IN !*************" << "\n";
 		oif = (*reRoutingMap)[reRoutingKey];
+		std::cout << "*********************Rerouting to oif=" << oif
+				<< "!*************" << "\n";
 
 		return oif;
 	}
