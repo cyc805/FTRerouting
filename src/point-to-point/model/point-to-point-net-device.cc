@@ -554,6 +554,8 @@ uint32_t PointToPointNetDevice::Forwarding_FatTree(Ptr<Packet> packet,
 			+ i2s(dstId.id_level) + i2s(turningId.id_pod)
 			+ i2s(turningId.id_switch) + i2s(turningId.id_level);
 	std::cout << "rerouting key = " << reRoutingKey << std::endl;
+
+	// Must use pointer to refer to the SAME map!
 	std::map<std::string, uint32_t>* reRoutingMap =
 			&this->GetNode()->reRoutingMap;
 	if (reRoutingMap->find(reRoutingKey) != reRoutingMap->end()) {
