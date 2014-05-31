@@ -356,13 +356,13 @@ void PointToPointNetDevice::Receive(Ptr<Packet> packet) {
 		// Server node has two NetDevices, one for self-loop and the other for communication with switch.
 		bool nodeIsServer = nDevices == 2;
 		bool isDeliverUp = nodeIsServer && dstIdTag == node->nodeId_FatTree;
-		std::cout << "dst ip:" << ipHeader.GetDestination() << std::endl;
-		std::cout << "src node tag: ";
-		srcIdTag.Print(std::cout);
-		std::cout << "dst node tag: ";
-		dstIdTag.Print(std::cout);
-		std::cout << "turing switch node tag: ";
-		turningIdTag.Print(std::cout);
+//		std::cout << "dst ip:" << ipHeader.GetDestination() << std::endl;
+//		std::cout << "src node tag: ";
+//		srcIdTag.Print(std::cout);
+//		std::cout << "dst node tag: ";
+//		dstIdTag.Print(std::cout);
+//		std::cout << "turing switch node tag: ";
+//		turningIdTag.Print(std::cout);
 		std::string nodeType = nodeIsServer ? "server" : "switch";
 		std::cout << "current " << nodeType << " tag:";
 		node->nodeId_FatTree.Print(std::cout);
@@ -566,12 +566,11 @@ uint32_t PointToPointNetDevice::Forwarding_FatTree(Ptr<Packet> packet,
 	}
 
 	if (IsForwarding_FatTree(nodeId, dstId, iif)) {
-		std::cout << "ture\n";
 		oif = NormalForwarding_FatTree(nodeId, dstId, turningId, iif);
-		std::cout << "oif = " << oif << std::endl;
+		std::cout << "forward to oif = " << oif << std::endl;
 	} else {
 //		nodeId.Print(std::cout);
-		std::cout << "false\n";
+		std::cout << "backward\n";
 		switch (nodeId.id_level) {
 		case 0: //go back to the source.
 			oif = NormalForwarding_FatTree(nodeId, srcId, turningId, iif);
