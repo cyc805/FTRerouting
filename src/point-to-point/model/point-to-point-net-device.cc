@@ -554,16 +554,17 @@ uint32_t PointToPointNetDevice::Forwarding_FatTree(Ptr<Packet> packet,
 			+ i2s(dstId.id_level) + i2s(turningId.id_pod)
 			+ i2s(turningId.id_switch) + i2s(turningId.id_level);
 	std::cout << "rerouting key = " << reRoutingKey << std::endl;
-	std::map<std::string, uint32_t> reRoutingMap = this->GetNode()->reRoutingMap;
-	if (reRoutingMap.find(reRoutingKey) != reRoutingMap.end()) {
+	std::map<std::string, uint32_t>* reRoutingMap =
+			&this->GetNode()->reRoutingMap;
+	if (reRoutingMap->find(reRoutingKey) != reRoutingMap->end()) {
 		std::cout << "*********************I am IN !=*************" << "\n";
-		oif = reRoutingMap[reRoutingKey];
+		oif = (*reRoutingMap)[reRoutingKey];
 
 		return oif;
 	} else {
 		std::cout << "rerouting map = " << std::endl;
 		for (std::map<std::string, uint32_t>::const_iterator it =
-				reRoutingMap.begin(); it != reRoutingMap.end(); ++it) {
+				reRoutingMap->begin(); it != reRoutingMap->end(); ++it) {
 			std::cout << "key=" << it->first << "; oif=" << it->second << "\n";
 		}
 	}
@@ -592,10 +593,11 @@ uint32_t PointToPointNetDevice::Forwarding_FatTree(Ptr<Packet> packet,
 					oif = Port_num;
 			}
 			if (srcId.id_pod == nodeId.id_pod) {
-				reRoutingMap[reRoutingKey] = oif;
+				(*reRoutingMap)[reRoutingKey] = oif;
 				std::cout << "add to rerouting map = " << std::endl;
 				for (std::map<std::string, uint32_t>::const_iterator it =
-						reRoutingMap.begin(); it != reRoutingMap.end(); ++it) {
+						reRoutingMap->begin(); it != reRoutingMap->end();
+						++it) {
 					std::cout << "key=" << it->first << "; oif=" << it->second
 							<< "\n";
 				}
