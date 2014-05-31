@@ -369,7 +369,7 @@ void PointToPointNetDevice::Receive(Ptr<Packet> packet) {
 
 		if (!isDeliverUp) { // forward to next hop
 
-			std::cout << "forward" << std::endl;
+			//std::cout << "forward" << std::endl;
 
 			uint32_t oifIndex = Forwarding_FatTree(packet, this->GetIfIndex());
 			//			uint32_t oifIndex = 1;Forwarding_FatTree(const  Packet & packet, uint32_t iif)
