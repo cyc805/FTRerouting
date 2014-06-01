@@ -32,81 +32,79 @@ using namespace std;
 
 std::map<Ptr<Node>, Ipv4Address> ServerIpMap;
 std::map<Ipv4Address, Ptr<Node> > IpServerMap;
+std::map<std::string, uint32_t> FailNode_oif_map;
 
 const int Port_num = 8; // set the switch number
-/**
- *This function is used to construct the ip address
- *of the nodes in the FatTree Topology;
- *Param pod , pswitch, num indicate the pod number, the pswitch num in every pod
- *and the port num in every switch; param level indicate the node level in the whole
- *topology, core switch is in level 0, and servers are in level 3.
- *param port_level, indicate the port level in every aggregate switch. the upper half is 1;
- */
-uint32_t construct_ip(int pod, int pswitch, int num, int level,
-		int port_level) {
-	uint32_t ip;
-	ip = 10;
-	ip = ip << 24;
-
-	if (level == 0) {
-		ip += (0 << 16);
-		ip += (pod) << 8;
-		ip += (num << 4);
-		return ip;
-	} else {
-		//ip+= ((pod<<4)+pswitch)<<16;
-		if (level == 1) {
-			if (port_level == 0) {
-				ip += 1 << 16;
-				ip += ((pod << 4) + pswitch) << 8;
-				ip += (num << 4);
-				return ip;
-			} else {
-				ip += 1 << 16;
-				ip += ((pod << 4) + pswitch) << 8;
-				ip += ((num + Port_num / 2) << 4);
-				return ip;
-			}
-		}
-		if (level == 2) {
-			if (port_level == 0) {
-				ip += 2 << 16;
-				ip += ((pod << 4) + pswitch) << 8;
-				ip += (num << 4);
-				return ip;
-			} else {
-				ip += 2 << 16;
-				ip += ((pod << 4) + pswitch) << 8;
-				ip += ((num + Port_num / 2) << 4);
-				return ip;
-			}
-		}
-		if (level == 3) {
-			ip += 3 << 16;
-			ip += ((pod << 4) + pswitch) << 8;
-			ip += (num << 4);
-			return ip;
-		}
-	}
-	return 0;
+///**
+// *This function is used to construct the ip address
+// *of the nodes in the FatTree Topology;
+// *Param pod , pswitch, num indicate the pod number, the pswitch num in every pod
+// *and the port num in every switch; param level indicate the node level in the whole
+// *topology, core switch is in level 0, and servers are in level 3.
+// *param port_level, indicate the port level in every aggregate switch. the upper half is 1;
+// */
+//uint32_t construct_ip(int pod, int pswitch, int num, int level,
+//		int port_level) {
+//	uint32_t ip;
+//	ip = 10;
+//	ip = ip << 24;
+//
+//	if (level == 0) {
+//		ip += (0 << 16);
+//		ip += (pod) << 8;
+//		ip += (num << 4);
+//		return ip;
+//	} else {
+//		//ip+= ((pod<<4)+pswitch)<<16;
+//		if (level == 1) {
+//			if (port_level == 0) {
+//				ip += 1 << 16;
+//				ip += ((pod << 4) + pswitch) << 8;
+//				ip += (num << 4);
+//				return ip;
+//			} else {
+//				ip += 1 << 16;
+//				ip += ((pod << 4) + pswitch) << 8;
+//				ip += ((num + Port_num / 2) << 4);
+//				return ip;
+//			}
+//		}
+//		if (level == 2) {
+//			if (port_level == 0) {
+//				ip += 2 << 16;
+//				ip += ((pod << 4) + pswitch) << 8;
+//				ip += (num << 4);
+//				return ip;
+//			} else {
+//				ip += 2 << 16;
+//				ip += ((pod << 4) + pswitch) << 8;
+//				ip += ((num + Port_num / 2) << 4);
+//				return ip;
+//			}
+//		}
+//		if (level == 3) {
+//			ip += 3 << 16;
+//			ip += ((pod << 4) + pswitch) << 8;
+//			ip += (num << 4);
+//			return ip;
+//		}
+//	}
+//	return 0;
+//}
+void setFailure(void) {
+	std::string failNodeId1 = "001";
+	uint32_t failOif1 = 2;
+	std::string failNodeId2 = "012";
+	uint32_t failOif2 = 5;
+	FailNode_oif_map[failNodeId1] = failOif1;
+	FailNode_oif_map[failNodeId2] = failOif2;
 }
-void printRoutingTable(Ptr<Node> node) {
-	Ipv4StaticRoutingHelper helper;
-	//Ipv4GlobalRoutingHelper helper;
-	Ptr<Ipv4> stack = node->GetObject<Ipv4>();
-	Ptr<Ipv4StaticRouting> staticRouting = helper.GetStaticRouting(stack);
-	//Ptr<Ipv4GlobalRouting> staticRouting = helper.
-	uint32_t numroutes = staticRouting->GetNRoutes();
-	Ipv4RoutingTableEntry entry;
-	std::cout << "Routing table for device: " << Names::FindName(node) << "\n";
-	std::cout << "Destination\t Mask \t\t Gateway \t\t Iface \n";
-	for (uint32_t i = 0; i < numroutes; i++) {
-		entry = staticRouting->GetRoute(i);
-		std::cout << entry.GetDestNetwork() << "\t"
-				<< entry.GetDestNetworkMask() << "\t" << entry.GetGateway()
-				<< "\t\t" << entry.GetInterface() << "\n";
+void clearFailure(NodeContainer switchAll) {
+	FailNode_oif_map.clear();
+	for(uint i =0; i < switchAll.GetN(); i++){
+		switchAll.Get(i)->reRoutingMap.clear();
 	}
-	return;
+
 }
 NS_LOG_COMPONENT_DEFINE("first");
 
@@ -267,19 +265,17 @@ int main(int argc, char *argv[]) {
 //		std::cout << "the ID for the l0switch is";
 //		node_l0switch.Get(i)->nodeId_FatTree.Print(std::cout);
 //	}
-
 	Ipv4GlobalRoutingHelper::PopulateRoutingTables();
-	//printRoutingTable(node_l1switch.Get(0));
-	//printRoutingTable(node_l2switch.Get(5));
-	//printRoutingTable(node_server.Get(1));
-	//printRoutingTable(node_l0switch.Get(14));
+// set fail link//
+
+// set application
 	Time::SetResolution(Time::NS);
 	LogComponentEnable("UdpEchoClientApplication", LOG_LEVEL_INFO);
 	LogComponentEnable("UdpEchoServerApplication", LOG_LEVEL_INFO);
 	UdpEchoServerHelper echoServer(9);
-//	ApplicationContainer serverApps = echoServer.Install(node_server.Get(5));
-//	serverApps.Start(Seconds(1.0));
-//	serverApps.Stop(Seconds(15.0));
+	ApplicationContainer serverApps = echoServer.Install(node_server.Get(5));
+	serverApps.Start(Seconds(1.0));
+	serverApps.Stop(Seconds(15.0));
 	std::cout << "server id is " << node_server.Get(5)->GetId() << std::endl;
 	UdpEchoClientHelper echoClient(Ipv4Address("10.0.193.17"), 9);
 //	10.0.193.17  ip of node 5
@@ -290,10 +286,22 @@ int main(int argc, char *argv[]) {
 	echoClient.SetAttribute("PacketSize", UintegerValue(1024));
 	ApplicationContainer clientApps = echoClient.Install(node_server.Get(32));
 	ApplicationContainer clientApps2 = echoClient.Install(node_server.Get(32));
+	ApplicationContainer clientApps3 = echoClient.Install(node_server.Get(32));
 	clientApps.Start(Seconds(2.0));
-	clientApps.Stop(Seconds(10.0));
+	clientApps.Stop(Seconds(13.0));
 	clientApps2.Start(Seconds(6.0));
-	clientApps2.Stop(Seconds(10.0));
+	clientApps2.Stop(Seconds(13.0));
+	clientApps3.Start(Seconds(10.0));
+	clientApps3.Stop(Seconds(13.0));
+
+	//set failure schedule
+	NodeContainer switchAll;
+	switchAll.Add(node_l2switch);
+	switchAll.Add(node_l1switch);
+	switchAll.Add(node_l0switch);
+	Simulator::Schedule(Seconds(1), setFailure);
+	Simulator::Schedule(Seconds(5), clearFailure, switchAll);
+	Simulator::Schedule(Seconds(9), setFailure);
 
 	Simulator::Stop(Seconds(20.0));
 	Simulator::Run();

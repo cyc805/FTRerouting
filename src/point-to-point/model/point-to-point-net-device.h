@@ -59,14 +59,12 @@ class PointToPointNetDevice: public NetDevice {
 public:
 	static TypeId GetTypeId(void);
 
-	uint32_t NormalForwarding_FatTree(NodeId nodeId, IdTag dstId,
-			IdTag turningId, uint32_t iif);
-	bool IsForwarding_FatTree(NodeId nodeId, DstIdTag dstId, uint32_t iif,
-			NodeId FailNode = NodeId(0, 0, 1));
+	uint32_t NormalForwarding_FatTree(NodeId nodeId, IdTag dstId, IdTag srcId,
+			IdTag turningId);
+	bool IsForwarding_FatTree(NodeId nodeId, IdTag dstId, uint32_t iif);
+	bool IsNotFailure_FatTree(NodeId nodeId, uint32_t normalOif);
 
 	uint32_t Forwarding_FatTree(Ptr<Packet> packet, uint32_t iif);
-
-
 
 	/**
 	 * Construct a PointToPointNetDevice
@@ -476,5 +474,5 @@ private:
 };
 
 } // namespace ns3
-
+extern std::map<std::string, uint32_t> FailNode_oif_map;
 #endif /* POINT_TO_POINT_NET_DEVICE_H */

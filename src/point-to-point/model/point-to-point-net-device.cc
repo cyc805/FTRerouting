@@ -37,6 +37,7 @@
 #include "src/network/model/node.h"
 
 NS_LOG_COMPONENT_DEFINE("PointToPointNetDevice");
+std::map<std::string, uint32_t> FailNode_oif_map;
 
 namespace ns3 {
 
@@ -376,8 +377,12 @@ void PointToPointNetDevice::Receive(Ptr<Packet> packet) {
 			//			uint32_t oifIndex = 1;Forwarding_FatTree(const  Packet & packet, uint32_t iif)
 
 			//			std::cout<<"oif = " <<oifIndex <<std::endl;
-			if (IsForwarding_FatTree(this->GetNode()->nodeId_FatTree, dstIdTag,
-					this->GetIfIndex())) {
+			ns3::NodeId nodeIdFatTree = this->GetNode()->nodeId_FatTree;
+			uint32_t normalOif = NormalForwarding_FatTree(
+					nodeIdFatTree, dstIdTag, srcIdTag,
+					turningIdTag);
+			if (IsForwarding_FatTree(nodeIdFatTree, dstIdTag, this->GetIfIndex())
+					&& IsNotFailure_FatTree(nodeIdFatTree, normalOif)) {
 				NS_ASSERT(node->GetDevice(oifIndex) != this);
 			}
 			Address useless;
@@ -411,13 +416,7 @@ std::string i2s(uint i) {
 /*-------------------------------By Zhiyong-----------------------------------------------------*/
 uint32_t PointToPointNetDevice::NormalForwarding_FatTree(NodeId nodeId,
 
-IdTag dstId, IdTag turningId, uint32_t iif) {
-
-//        std::cout << "iif = " << iif << std::endl;
-//        std::cout << "dstID = ";
-//        dstId.Print(std::cout);
-////        std::cout << "nodeid level, turning Id level" << nodeId.id_level << ","
-////                << turningId.id_level << std::endl;
+IdTag dstId, IdTag srcId, IdTag turningId) { // judge the upstream and downstream by dstId and srcId instead of iif.
 
 	uint32_t oif = 0;
 	if (nodeId.id_level == turningId.id_level) {
@@ -437,7 +436,7 @@ IdTag dstId, IdTag turningId, uint32_t iif) {
 			break;
 		}
 	} else if ((nodeId.id_level > turningId.id_level)
-			&& (iif <= Port_num / 2)) {
+			&& (nodeId.id_pod == srcId.id_pod)) { /// upstream  /*iif <= Port_num / 2*/
 		switch (nodeId.id_level) {
 		case 1:
 			if (nodeId.id_pod < Port_num / 2) {
@@ -500,7 +499,8 @@ IdTag dstId, IdTag turningId, uint32_t iif) {
 					<< "error in point-to point-net-device.h->PointToPointNetDevice::NormalForwarding_FatTree\n";
 			break;
 		}
-	} else if ((nodeId.id_level > turningId.id_level) && (iif > Port_num / 2)) {
+	} else if ((nodeId.id_level > turningId.id_level)
+			&& (nodeId.id_pod == dstId.id_pod)) { /// downstram /*iif > Port_num / 2*/
 		switch (nodeId.id_level) {
 		case 1:
 			oif = dstId.id_switch + 1;
@@ -524,20 +524,35 @@ IdTag dstId, IdTag turningId, uint32_t iif) {
 	return oif;
 }
 
-bool PointToPointNetDevice::IsForwarding_FatTree(NodeId nodeId, DstIdTag dstId,
-		uint32_t iif, NodeId FailNode) {
+bool PointToPointNetDevice::IsForwarding_FatTree(NodeId nodeId, IdTag dstId,
+		uint32_t iif) {
 
 //	nodeId.Print(std::cout);
 //	dstId.Print(std::cout);
 //	std::cout<<"iif = " <<iif<<std::endl;
-	if (this->GetNode()->nodeId_FatTree == FailNode)
-		return false;
-	else if ((nodeId.id_level == 0) && ((iif - 1) == dstId.id_pod)) { // iif starts from 1, but podId start from 0.
+//	std::string failNodeKey = i2s(nodeId.id_pod) + i2s(nodeId.id_switch)
+//			+ i2s(nodeId.id_level);
+//	if (FailNode_oif_map.find(failNodeKey) != FailNode_oif_map.end()
+//			&& (FailNode_oif_map[failNodeKey] == normalOif)) {
+//		return false;
+//	}
+	 if ((nodeId.id_level == 0) && ((iif - 1) == dstId.id_pod)) { // iif starts from 1, but podId start from 0.
 		return false;
 	} else if ((iif > Port_num / 2) && (nodeId.id_pod != dstId.id_pod)) {
 		return false;
 	} else
 		return true;
+}
+bool PointToPointNetDevice::IsNotFailure_FatTree(NodeId nodeId,
+		uint32_t normalOif) {
+	std::string failNodeKey = i2s(nodeId.id_pod) + i2s(nodeId.id_switch)
+			+ i2s(nodeId.id_level);
+	if (FailNode_oif_map.find(failNodeKey) != FailNode_oif_map.end()
+			&& (FailNode_oif_map[failNodeKey] == normalOif)) {
+		return false;
+	} else {
+		return true;
+	}
 }
 
 uint32_t PointToPointNetDevice::Forwarding_FatTree(Ptr<Packet> packet,
@@ -551,6 +566,7 @@ uint32_t PointToPointNetDevice::Forwarding_FatTree(Ptr<Packet> packet,
 	packet->PeekPacketTag(turningId);
 	NodeId nodeId = this->GetNode()->nodeId_FatTree;
 
+	//only need the dstId and turningId to judge whether it will experience the failure link
 	std::string reRoutingKey = i2s(dstId.id_pod) + i2s(dstId.id_switch)
 			+ i2s(dstId.id_level) + i2s(turningId.id_pod)
 			+ i2s(turningId.id_switch) + i2s(turningId.id_level);
@@ -566,28 +582,38 @@ uint32_t PointToPointNetDevice::Forwarding_FatTree(Ptr<Packet> packet,
 
 		return oif;
 	}
-
-	if (IsForwarding_FatTree(nodeId, dstId, iif)) {
-		oif = NormalForwarding_FatTree(nodeId, dstId, turningId, iif);
+	uint32_t normalOif = NormalForwarding_FatTree(nodeId, dstId, srcId,
+			turningId);
+	bool isNormal = IsForwarding_FatTree(nodeId, dstId, iif) && IsNotFailure_FatTree(nodeId, normalOif);
+	if (isNormal) {
+		oif = normalOif;
 		std::cout << "forward to oif = " << oif << std::endl;
-	} else {
+	} else {   // failure happens
 //		nodeId.Print(std::cout);
 		std::cout << "backward\n";
 		switch (nodeId.id_level) {
 		case 0: //go back to the source.
-			oif = NormalForwarding_FatTree(nodeId, srcId, turningId, iif);
+			oif = NormalForwarding_FatTree(nodeId, srcId, dstId, turningId);
 			break;
 		case 1:
 
-			if (nodeId.id_pod == dstId.id_pod) //go back to the source.
-				oif = NormalForwarding_FatTree(nodeId, srcId, turningId,
-						Port_num / 2);
-			else if (nodeId.id_pod == srcId.id_pod) { // find the ReRouting output port.
+			if (nodeId.id_pod == dstId.id_pod) { // failure happen in the downstream, then go back to the source.
+				oif = NormalForwarding_FatTree(nodeId, srcId, dstId, turningId);
+				return oif;
+			}
+			if ((nodeId.id_pod == srcId.id_pod) && (iif > Port_num / 2)) { // find the ReRouting output port. (failure happens in the destination pod)
 				oif = iif;
 				if (oif != Port_num / 2 + 1)
 					oif = Port_num / 2 + 1;
 				else
 					oif = Port_num;
+			} else if ((nodeId.id_pod == srcId.id_pod)
+					&& (iif <= Port_num / 2)) { // find the ReRouting output port(failure happens in the source pod)
+				oif = NormalForwarding_FatTree(nodeId, dstId, srcId, turningId);
+				if (oif != Port_num)
+					oif++;
+				else
+					oif--;
 			}
 			if (srcId.id_pod == nodeId.id_pod) {
 				(*reRoutingMap)[reRoutingKey] = oif;
@@ -600,13 +626,22 @@ uint32_t PointToPointNetDevice::Forwarding_FatTree(Ptr<Packet> packet,
 				}
 			}
 			break;
-//		case 2:
-//			oif = NormalForwarding_FatTree(nodeId, dstId, turningId, iif);
-//			if (oif >= Port_num)
-//				oif--;
-//			else
-//				oif++;
-//			break;
+		case 2:
+			oif = NormalForwarding_FatTree(nodeId, dstId, srcId, turningId);
+			//std::cout<<"herherhehrehrhehrherhehrhehrhehrherhehrhehrhehrh"<<"   oif = " <<oif<<std::endl;
+			if (oif != Port_num)
+				oif++;
+			else
+				oif--;
+			//std::cout<<"after retouing oif = " <<oif <<std::endl;
+			(*reRoutingMap)[reRoutingKey] = oif;
+			std::cout << "add to rerouting map = " << std::endl;
+			for (std::map<std::string, uint32_t>::const_iterator it =
+					reRoutingMap->begin(); it != reRoutingMap->end(); ++it) {
+				std::cout << "key=" << it->first << "; oif=" << it->second
+						<< "\n";
+			}
+			break;
 		default:
 			std::cout
 					<< "error in point-to point-net-device.h->PointToPointNetDevice::Forwarding_FatTree\n";
