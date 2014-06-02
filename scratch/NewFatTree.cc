@@ -35,62 +35,7 @@ std::map<Ipv4Address, Ptr<Node> > IpServerMap;
 std::map<std::string, uint32_t> FailNode_oif_map;
 
 const int Port_num = 8; // set the switch number
-///**
-// *This function is used to construct the ip address
-// *of the nodes in the FatTree Topology;
-// *Param pod , pswitch, num indicate the pod number, the pswitch num in every pod
-// *and the port num in every switch; param level indicate the node level in the whole
-// *topology, core switch is in level 0, and servers are in level 3.
-// *param port_level, indicate the port level in every aggregate switch. the upper half is 1;
-// */
-//uint32_t construct_ip(int pod, int pswitch, int num, int level,
-//		int port_level) {
-//	uint32_t ip;
-//	ip = 10;
-//	ip = ip << 24;
-//
-//	if (level == 0) {
-//		ip += (0 << 16);
-//		ip += (pod) << 8;
-//		ip += (num << 4);
-//		return ip;
-//	} else {
-//		//ip+= ((pod<<4)+pswitch)<<16;
-//		if (level == 1) {
-//			if (port_level == 0) {
-//				ip += 1 << 16;
-//				ip += ((pod << 4) + pswitch) << 8;
-//				ip += (num << 4);
-//				return ip;
-//			} else {
-//				ip += 1 << 16;
-//				ip += ((pod << 4) + pswitch) << 8;
-//				ip += ((num + Port_num / 2) << 4);
-//				return ip;
-//			}
-//		}
-//		if (level == 2) {
-//			if (port_level == 0) {
-//				ip += 2 << 16;
-//				ip += ((pod << 4) + pswitch) << 8;
-//				ip += (num << 4);
-//				return ip;
-//			} else {
-//				ip += 2 << 16;
-//				ip += ((pod << 4) + pswitch) << 8;
-//				ip += ((num + Port_num / 2) << 4);
-//				return ip;
-//			}
-//		}
-//		if (level == 3) {
-//			ip += 3 << 16;
-//			ip += ((pod << 4) + pswitch) << 8;
-//			ip += (num << 4);
-//			return ip;
-//		}
-//	}
-//	return 0;
-//}
+
 void setFailure(void) {
 	std::string failNodeId1 = "001";
 	uint32_t failOif1 = 2;
@@ -146,7 +91,6 @@ int main(int argc, char *argv[]) {
 	p2p.SetChannelAttribute("Delay", StringValue("10ms"));
 
 	// First create four set of Level-0 subnets
-	//uint32_t ip1, ip2;
 	uint32_t ip1;
 
 	for (int i = 0; i < Port_num; i++)      // cycling with pods
@@ -165,7 +109,7 @@ int main(int argc, char *argv[]) {
 //						i * (Port_num * Port_num / 4) + j * (Port_num / 2) + k)->SetId_FatTree(
 //						i, j, k); // labling the host server
 
-				serverNode->nodeId_FatTree = NodeId(i, j, k);
+				serverNode->nodeId_FatTree = NodeId(i, j, k);  // labling the host server
 				node.Add(node_l2switch.Get(i * (Port_num / 2) + j));
 				link = p2p.Install(node);
 				// assign the ip address of the two device.
@@ -212,10 +156,6 @@ int main(int argc, char *argv[]) {
 					2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16, 1, 5 }, { 13, 2,
 					6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16, 1, 5, 9 } };
 
-//	int Pod[Port_num][Port_num * Port_num / 4] = {
-//			{ 1, 2, 3, 4, 5, 6, 7, 8, 9 }, { 2, 3, 4, 5, 6, 7, 8, 9, 1 }, { 3,
-//					4, 5, 6, 7, 8, 9, 1, 2 }, { 1, 4, 7, 2, 5, 8, 3, 6, 9 }, {
-//					4, 7, 2, 5, 8, 3, 6, 9, 1 }, { 7, 2, 5, 8, 3, 6, 9, 1, 4 } };
 	int temp = 0;
 	for (int i = 0; i < Port_num; i++)	//cycling among the pods
 			{
@@ -230,10 +170,6 @@ int main(int argc, char *argv[]) {
 				node.Add(node_l0switch.Get(temp - 1));
 				link = p2p.Install(node);
 				ip1 = (10 << 24) + (i << 16) + (1 << 14) + (j << 8) + (k << 4);
-				//ip2 = construct_ip(temp,k,j,0,0);
-				// assign the ip address of the two device.
-				//p2p_ip =address.Assign_FatTree(link,ip1,ip2,"255.0.0.0");
-				//ip1 = construct_ip(temp,k,0,0,0);
 				address.SetBase(Ipv4Address(ip1), "255.255.255.248");
 				p2p_ip = address.Assign(link);
 			}
@@ -272,41 +208,66 @@ int main(int argc, char *argv[]) {
 	Time::SetResolution(Time::NS);
 	LogComponentEnable("UdpEchoClientApplication", LOG_LEVEL_INFO);
 	LogComponentEnable("UdpEchoServerApplication", LOG_LEVEL_INFO);
-	UdpEchoServerHelper echoServer(9);
-	ApplicationContainer serverApps = echoServer.Install(node_server.Get(5));
-	serverApps.Start(Seconds(1.0));
-	serverApps.Stop(Seconds(15.0));
-	std::cout << "server id is " << node_server.Get(5)->GetId() << std::endl;
-	UdpEchoClientHelper echoClient(Ipv4Address("10.0.193.17"), 9);
+//	LogComponentEnable("ns3::TcpSocketFactory", LOG_LEVEL_INFO);
+//	UdpEchoServerHelper echoServer(9);
+//	ApplicationContainer serverApps = echoServer.Install(node_server.Get(5));
+//	serverApps.Start(Seconds(1.0));
+//	serverApps.Stop(Seconds(15.0));
+//	std::cout << "server id is " << node_server.Get(5)->GetId() << std::endl;
+//	UdpEchoClientHelper echoClient(Ipv4Address("10.0.193.17"), 9);
 //	10.0.193.17  ip of node 5
 //	10.0.192.1 ip of node 0
 //	10.0.193.33 ip of node 6
-	echoClient.SetAttribute("MaxPackets", UintegerValue(1));
-	echoClient.SetAttribute("Interval", TimeValue(Seconds(1.0)));
-	echoClient.SetAttribute("PacketSize", UintegerValue(1024));
-	ApplicationContainer clientApps = echoClient.Install(node_server.Get(32));
-	ApplicationContainer clientApps2 = echoClient.Install(node_server.Get(32));
-	ApplicationContainer clientApps3 = echoClient.Install(node_server.Get(32));
-	clientApps.Start(Seconds(2.0));
-	clientApps.Stop(Seconds(13.0));
-	clientApps2.Start(Seconds(6.0));
-	clientApps2.Stop(Seconds(13.0));
-	clientApps3.Start(Seconds(10.0));
-	clientApps3.Stop(Seconds(13.0));
+//	echoClient.SetAttribute("MaxPackets", UintegerValue(1));
+//	echoClient.SetAttribute("Interval", TimeValue(Seconds(1.0)));
+//	echoClient.SetAttribute("PacketSize", UintegerValue(1024));
+//	ApplicationContainer clientApps = echoClient.Install(node_server.Get(32));
+//	ApplicationContainer clientApps2 = echoClient.Install(node_server.Get(32));
+//	ApplicationContainer clientApps3 = echoClient.Install(node_server.Get(32));
+//	clientApps.Start(Seconds(2.0));
+//	clientApps.Stop(Seconds(13.0));
+//	clientApps2.Start(Seconds(6.0));
+//	clientApps2.Stop(Seconds(13.0));
+//	clientApps3.Start(Seconds(10.0));
+//	clientApps3.Stop(Seconds(13.0));
 
+
+	uint16_t port;
+	port =20;
+	//---------------------------------Bulk and Sink Application-------------------------------//
+	BulkSendHelper source("ns3::TcpSocketFactory",(InetSocketAddress(Ipv4Address("10.0.193.17"),port)));
+
+
+	source.SetAttribute("MaxBytes", UintegerValue(5000));
+	ApplicationContainer sourceApps = source.Install(node_server.Get(32));
+
+	sourceApps.Start(Seconds(0.5));
+	sourceApps.Stop(Seconds(20.0));
+	PacketSinkHelper sink("ns3::TcpSocketFactory", (InetSocketAddress(Ipv4Address("10.0.193.17"),port)));
+	ApplicationContainer sinkApps = sink.Install(node_server.Get(5));
+
+	sinkApps.Start(Seconds(0.5));
+	sinkApps.Stop(Seconds(20.0));
+
+//	p2p.EnablePcap("server tracing", node_server.Get(5)->GetDevice(1),true);
+//	p2p.EnablePcap("server tracing2", node_server.Get(32)->GetDevice(1),true);
+	//-------------------------------------------------------------------------------------------//
 	//set failure schedule
 	NodeContainer switchAll;
 	switchAll.Add(node_l2switch);
 	switchAll.Add(node_l1switch);
 	switchAll.Add(node_l0switch);
-	Simulator::Schedule(Seconds(1), setFailure);
-	Simulator::Schedule(Seconds(5), clearFailure, switchAll);
-	Simulator::Schedule(Seconds(9), setFailure);
+//	Simulator::Schedule(Seconds(1.0), setFailure);
+//	Simulator::Schedule(Seconds(5.0), clearFailure, switchAll);
+//	Simulator::Schedule(Seconds(9.0), setFailure);
 
 	Simulator::Stop(Seconds(20.0));
 	Simulator::Run();
 	Simulator::Destroy();
-
+	PacketSink* sinkStatistic = dynamic_cast<PacketSink*>(&(*sinkApps.Get(0)));
+	std::cout<<"total size : "<<sinkStatistic->GetTotalRx()<<std::endl;
+	std::cout<<"total number of packets : "<<sinkStatistic->packetN <<std::endl;
+	std::cout<<"total delay is : "<<sinkStatistic->totalDelay<<std::endl;
 //	delete []Pod;
 //	//Pod = NULL;
 

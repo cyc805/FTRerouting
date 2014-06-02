@@ -65,50 +65,51 @@ class Packet;
  * enabled, it prints out the size of packets and their address, but
  * we intend to also add a tracing source to Receive() at a later date.
  */
-class PacketSink : public Application 
-{
+class PacketSink: public Application {
 public:
-  static TypeId GetTypeId (void);
-  PacketSink ();
+	static TypeId GetTypeId(void);
+	PacketSink();
 
-  virtual ~PacketSink ();
+	virtual ~PacketSink();
+	uint32_t packetN;
+	double totalDelay;
 
-  /**
-   * \return the total bytes received in this sink app
-   */
-  uint32_t GetTotalRx () const;
+	/**
+	 * \return the total bytes received in this sink app
+	 */
+	uint32_t GetTotalRx() const;
 
-  /**
-   * \return pointer to listening socket
-   */
-  Ptr<Socket> GetListeningSocket (void) const;
+	/**
+	 * \return pointer to listening socket
+	 */
+	Ptr<Socket> GetListeningSocket(void) const;
 
-  /**
-   * \return list of pointers to accepted sockets
-   */
-  std::list<Ptr<Socket> > GetAcceptedSockets (void) const;
- 
+	/**
+	 * \return list of pointers to accepted sockets
+	 */
+	std::list<Ptr<Socket> > GetAcceptedSockets(void) const;
+
 protected:
-  virtual void DoDispose (void);
+	virtual void DoDispose(void);
 private:
-  // inherited from Application base class.
-  virtual void StartApplication (void);    // Called at time specified by Start
-  virtual void StopApplication (void);     // Called at time specified by Stop
+	// inherited from Application base class.
+	virtual void StartApplication(void);    // Called at time specified by Start
+	virtual void StopApplication(void);     // Called at time specified by Stop
 
-  void HandleRead (Ptr<Socket>);
-  void HandleAccept (Ptr<Socket>, const Address& from);
-  void HandlePeerClose (Ptr<Socket>);
-  void HandlePeerError (Ptr<Socket>);
+	void HandleRead(Ptr<Socket>);
+	void HandleAccept(Ptr<Socket>, const Address& from);
+	void HandlePeerClose(Ptr<Socket>);
+	void HandlePeerError(Ptr<Socket>);
 
-  // In the case of TCP, each socket accept returns a new socket, so the 
-  // listening socket is stored seperately from the accepted sockets
-  Ptr<Socket>     m_socket;       // Listening socket
-  std::list<Ptr<Socket> > m_socketList; //the accepted sockets
+	// In the case of TCP, each socket accept returns a new socket, so the
+	// listening socket is stored seperately from the accepted sockets
+	Ptr<Socket> m_socket;       // Listening socket
+	std::list<Ptr<Socket> > m_socketList; //the accepted sockets
 
-  Address         m_local;        // Local address to bind to
-  uint32_t        m_totalRx;      // Total bytes received
-  TypeId          m_tid;          // Protocol TypeId
-  TracedCallback<Ptr<const Packet>, const Address &> m_rxTrace;
+	Address m_local;        // Local address to bind to
+	uint32_t m_totalRx;      // Total bytes received
+	TypeId m_tid;          // Protocol TypeId
+	TracedCallback<Ptr<const Packet>, const Address &> m_rxTrace;
 
 };
 

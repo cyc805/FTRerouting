@@ -151,6 +151,36 @@ TypeId TurningIdTag::GetInstanceTypeId(void) const {
 	return GetTypeId();
 }
 /*----------------------------------------------------------------------------------------*/
+/*------------------------------By Zhiyong------------------------------------------------*/
+TimeTag::TimeTag():Tag() {
+	time = 1;
+}
+TimeTag::TimeTag(double time_):Tag(){
+	time = time_;
+}
+TypeId TimeTag::GetTypeId(void){
+	static TypeId tid = TypeId("ns3::TimeTag").SetParent<Tag>().AddConstructor<
+			TimeTag>();
+	return tid;
+}
+TypeId TimeTag::GetInstanceTypeId(void) const{
+	return GetTypeId();
+}
+uint32_t TimeTag::GetSerializedSize(void) const{
+	return sizeof(double);
+}
+void TimeTag::Serialize(TagBuffer i) const{
+	i.WriteDouble(time);
+}
+void TimeTag::Deserialize(TagBuffer i){
+	time = i.ReadDouble();
+}
+void TimeTag::Print(std::ostream &os) const{
+	std::cout<<"Start time is: "<< time<<std::endl;
+}
+
+
+/*----------------------------------------------------------------------------------------*/
 
 /*
  *uint32_t Id0;//used to do selfrouting

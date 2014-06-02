@@ -658,6 +658,8 @@ void Ipv4L3Protocol::SendRealOut(Ptr<Ipv4Route> route, Ptr<Packet> packet,
 		NodeId nodeId_dst = IpServerMap[dstIp]->nodeId_FatTree;
 		NodeId nodeId_src = IpServerMap[srcIp]->nodeId_FatTree;
 		NodeId nodeId_turning;
+		double time = Simulator::Now().GetSeconds();
+		TimeTag timeTag = TimeTag(time);
 		std::cout << "src node=";
 		nodeId_src.Print(std::cout);
 		std::cout << "dst node=";
@@ -686,6 +688,8 @@ void Ipv4L3Protocol::SendRealOut(Ptr<Ipv4Route> route, Ptr<Packet> packet,
 						nodeId_turning.id_level));
 		std::cout << "turning node=";
 		nodeId_turning.Print(std::cout);
+		packet->AddPacketTag(TimeTag(time));
+		timeTag.Print(std::cout);
 		std::cout << "tag added!" << std::endl;
 	}
 	/*-----------------------------------------------------------------*/

@@ -89,7 +89,21 @@ public:
 	TurningIdTag(uint32_t id_pod, uint32_t id_switch, uint32_t id_level);
 };
 /*--------------------------------------------------------------------------------------------*/
+/*--------------------------------------------------By Zhiyong--------------------------------*/
+class TimeTag: public Tag{
+public:
+	static TypeId GetTypeId(void);
+	virtual TypeId GetInstanceTypeId(void) const;
+	virtual uint32_t GetSerializedSize(void) const;
+	virtual void Serialize(TagBuffer i) const;
+	virtual void Deserialize(TagBuffer i);
+	virtual void Print(std::ostream &os) const;
+	TimeTag();
+	TimeTag(double time_);
+	double time;
+};
 
+/*--------------------------------------------------------------------------------------------*/
 /**
  * \ingroup network
  *
