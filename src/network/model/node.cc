@@ -152,33 +152,34 @@ TypeId TurningIdTag::GetInstanceTypeId(void) const {
 }
 /*----------------------------------------------------------------------------------------*/
 /*------------------------------By Zhiyong------------------------------------------------*/
-TimeTag::TimeTag():Tag() {
+TimeStampTag::TimeStampTag() :
+		Tag() {
 	time = 1;
 }
-TimeTag::TimeTag(double time_):Tag(){
-	time = time_;
+TimeStampTag::TimeStampTag(double time_) {
+	this->time = time_;
 }
-TypeId TimeTag::GetTypeId(void){
-	static TypeId tid = TypeId("ns3::TimeTag").SetParent<Tag>().AddConstructor<
-			TimeTag>();
+TypeId TimeStampTag::GetTypeId(void) {
+	static TypeId tid =
+			TypeId("ns3::TimeStampTag").SetParent<Tag>().AddConstructor<
+					TimeStampTag>();
 	return tid;
 }
-TypeId TimeTag::GetInstanceTypeId(void) const{
+TypeId TimeStampTag::GetInstanceTypeId(void) const {
 	return GetTypeId();
 }
-uint32_t TimeTag::GetSerializedSize(void) const{
+uint32_t TimeStampTag::GetSerializedSize(void) const {
 	return sizeof(double);
 }
-void TimeTag::Serialize(TagBuffer i) const{
+void TimeStampTag::Serialize(TagBuffer i) const {
 	i.WriteDouble(time);
 }
-void TimeTag::Deserialize(TagBuffer i){
+void TimeStampTag::Deserialize(TagBuffer i) {
 	time = i.ReadDouble();
 }
-void TimeTag::Print(std::ostream &os) const{
-	std::cout<<"Start time is: "<< time<<std::endl;
+void TimeStampTag::Print(std::ostream &os) const {
+	std::cout << "Start time is: " << time << std::endl;
 }
-
 
 /*----------------------------------------------------------------------------------------*/
 
@@ -456,6 +457,5 @@ void Node::NotifyDeviceAdded(Ptr<NetDevice> device) {
 		(*i)(device);
 	}
 }
-
 
 } // namespace ns3

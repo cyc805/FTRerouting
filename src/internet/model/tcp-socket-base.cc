@@ -82,7 +82,7 @@ TcpSocketBase::GetTypeId (void)
     .AddAttribute ("IcmpCallback6", "Callback invoked whenever an icmpv6 error is received on this socket.",
                    CallbackValue (),
                    MakeCallbackAccessor (&TcpSocketBase::m_icmpCallback6),
-                   MakeCallbackChecker ())                   
+                   MakeCallbackChecker ())
     .AddTraceSource ("RTO",
                      "Retransmission timeout",
                      MakeTraceSourceAccessor (&TcpSocketBase::m_rto))
@@ -455,7 +455,7 @@ TcpSocketBase::Close (void)
       SendRST ();
       return 0;
     }
- 
+
   if (m_txBuffer.SizeFromSequence (m_nextTxSequence) > 0)
     { // App close with pending data must wait until all data transmitted
       if (m_closeOnEmpty == false)
@@ -473,7 +473,7 @@ int
 TcpSocketBase::ShutdownSend (void)
 {
   NS_LOG_FUNCTION (this);
-  
+
   //this prevents data from being added to the buffer
   m_shutdownSend = true;
   m_closeOnEmpty = true;
@@ -484,7 +484,7 @@ TcpSocketBase::ShutdownSend (void)
       if (m_state == ESTABLISHED || m_state == CLOSE_WAIT)
         {
           NS_LOG_INFO("Emtpy tx buffer, send fin");
-          SendEmptyPacket (TcpHeader::FIN);  
+          SendEmptyPacket (TcpHeader::FIN);
 
           if (m_state == ESTABLISHED)
             { // On active close: I am the first one to send FIN
@@ -495,10 +495,10 @@ TcpSocketBase::ShutdownSend (void)
             { // On passive close: Peer sent me FIN already
               NS_LOG_INFO ("CLOSE_WAIT -> LAST_ACK");
               m_state = LAST_ACK;
-            }  
+            }
         }
     }
- 
+
   return 0;
 }
 
@@ -2081,13 +2081,13 @@ TcpSocketBase::EstimateRtt (const TcpHeader& tcpHeader)
   Time nextRtt =  m_rtt->AckSeq (tcpHeader.GetAckNumber () );
 
   //nextRtt will be zero for dup acks.  Don't want to update lastRtt in that case
-  //but still needed to do list clearing that is done in AckSeq. 
+  //but still needed to do list clearing that is done in AckSeq.
   if(nextRtt != 0)
   {
     m_lastRtt = nextRtt;
     NS_LOG_FUNCTION(this << m_lastRtt);
   }
-  
+
 }
 
 // Called by the ReceivedAck() when new ACK received and by ProcessSynRcvd()

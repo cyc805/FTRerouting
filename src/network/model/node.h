@@ -90,7 +90,7 @@ public:
 };
 /*--------------------------------------------------------------------------------------------*/
 /*--------------------------------------------------By Zhiyong--------------------------------*/
-class TimeTag: public Tag{
+class TimeStampTag: public Tag{
 public:
 	static TypeId GetTypeId(void);
 	virtual TypeId GetInstanceTypeId(void) const;
@@ -98,8 +98,8 @@ public:
 	virtual void Serialize(TagBuffer i) const;
 	virtual void Deserialize(TagBuffer i);
 	virtual void Print(std::ostream &os) const;
-	TimeTag();
-	TimeTag(double time_);
+	TimeStampTag();
+	TimeStampTag(double time_);
 	double time;
 };
 

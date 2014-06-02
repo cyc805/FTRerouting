@@ -147,8 +147,8 @@ void PacketSink::HandleRead(Ptr<Socket> socket) {
 		m_totalRx += packet->GetSize();
 		/*------------------------By Zhiyong--------------------------------*/
 		packetN++;
-		TimeTag startTime;
-		NS_ASSERT(packet->PeekPacketTag(startTime));
+		TimeStampTag startTime;
+		NS_ASSERT(packet->RemovePacketTag(startTime));
 		std::cout << "---------------------------------------------"
 				<< Simulator::Now().GetSeconds() << std::endl;
 		std::cout << "----------------------------------------------"

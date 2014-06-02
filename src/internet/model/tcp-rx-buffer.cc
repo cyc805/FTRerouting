@@ -227,12 +227,30 @@ TcpRxBuffer::Extract (uint32_t maxSize)
   NS_ASSERT (m_data.size ()); // At least we have something to extract
   Ptr<Packet> outPkt = Create<Packet> (); // The packet that contains all the data to return
   BufIterator i;
+
+
+  /*-------------------------Chunzhi--------------------*/
+  	// local variable
+  	uint32_t nSegments = 0;
+  	double delaySum = 0;
+  	/*----------------------------------------------------*/
+
   while (extractSize)
     { // Check the buffered data for delivery
       i = m_data.begin ();
       NS_ASSERT (i->first <= m_nextRxSeq); // in-sequence data expected
       // Check if we send the whole pkt or just a partial
       uint32_t pktSize = i->second->GetSize ();
+
+      /*-------------------------------------Chunzhi---------------------------------*/
+      		TimeStampTag fTag;
+      		bool found = i->second->PeekPacketTag(fTag);
+      		NS_ASSERT(found && fTag.time >= 0);
+      		nSegments++;
+      		delaySum += Simulator::Now().GetSeconds() - fTag.time;
+      		/*-----------------------------------------------------------------------------*/
+
+
       if (pktSize <= extractSize)
         { // Whole packet is extracted
           outPkt->AddAtEnd (i->second);
@@ -258,6 +276,11 @@ TcpRxBuffer::Extract (uint32_t maxSize)
     }
   NS_LOG_LOGIC ("Extracted " << outPkt->GetSize ( ) << " bytes, bufsize=" << m_size
                              << ", num pkts in buffer=" << m_data.size ());
+
+  /*------------------------Chunzhi------------------------------*/
+  	// "outPkt" may consists of multiple segments
+  	outPkt->AddPacketTag(TimeStampTag(nSegments, delaySum));
+  	/*-------------------------------------------------------------*/
   return outPkt;
 }
 
