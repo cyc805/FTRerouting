@@ -146,14 +146,10 @@ void PacketSink::HandleRead(Ptr<Socket> socket) {
 		}
 		m_totalRx += packet->GetSize();
 		/*------------------------By Zhiyong--------------------------------*/
-		packetN++;
-		TimeStampTag startTime;
-		NS_ASSERT(packet->RemovePacketTag(startTime));
-		std::cout << "---------------------------------------------"
-				<< Simulator::Now().GetSeconds() << std::endl;
-		std::cout << "----------------------------------------------"
-				<< startTime.time << std::endl;
-		totalDelay += (Simulator::Now().GetSeconds() - startTime.time);
+		PacketSumTag pktSum;
+		NS_ASSERT(packet->RemovePacketTag(pktSum));
+		packetN += pktSum.nPkt;
+		totalDelay += pktSum.delaySum;
 		/*------------------------------------------------------------------*/
 		if (InetSocketAddress::IsMatchingType(from)) {
 			NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds ()

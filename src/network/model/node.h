@@ -102,6 +102,19 @@ public:
 	TimeStampTag(double time_);
 	double time;
 };
+class PacketSumTag: public Tag{
+public:
+	static TypeId GetTypeId(void);
+	virtual TypeId GetInstanceTypeId(void) const;
+	virtual uint32_t GetSerializedSize(void) const;
+	virtual void Serialize(TagBuffer i) const;
+	virtual void Deserialize(TagBuffer i);
+	virtual void Print(std::ostream &os) const;
+	PacketSumTag();
+	PacketSumTag(uint32_t nPkt_, double delaySum_);
+	double delaySum;
+	uint32_t nPkt;
+};
 
 /*--------------------------------------------------------------------------------------------*/
 /**

@@ -325,7 +325,7 @@ void PointToPointNetDevice::Receive(Ptr<Packet> packet) {
 		m_macRxTrace(packet);
 
 		/*----------------------------------Chunzhi------------------------------*/
-		std::cout << std::endl;
+//		std::cout << std::endl;
 		Ptr<Node> node = this->GetNode();
 		uint32_t nDevices = node->GetNDevices();
 
@@ -365,9 +365,9 @@ void PointToPointNetDevice::Receive(Ptr<Packet> packet) {
 //		dstIdTag.Print(std::cout);
 //		std::cout << "turing switch node tag: ";
 //		turningIdTag.Print(std::cout);
-		std::string nodeType = nodeIsServer ? "server" : "switch";
-		std::cout << "current " << nodeType << " tag:";
-		node->nodeId_FatTree.Print(std::cout);
+//		std::string nodeType = nodeIsServer ? "server" : "switch";
+//		std::cout << "current " << nodeType << " tag:";
+//		node->nodeId_FatTree.Print(std::cout);
 
 		if (!isDeliverUp) { // forward to next hop
 
@@ -396,7 +396,7 @@ void PointToPointNetDevice::Receive(Ptr<Packet> packet) {
 		}/*-----------------------------------------------------------------------*/
 
 		else { // deliver to local upper layer
-			std::cout << "deliver" << std::endl;
+//			std::cout << "deliver" << std::endl;
 
 			// Comment by Chunzhi: PointToPointNetDevice::m_rxCallback is linked to Ipv4L3Protocol::Receive or Ipv6L3Protocol::Receive
 			m_rxCallback(this, packet, protocol, GetRemote());
@@ -570,15 +570,15 @@ uint32_t PointToPointNetDevice::Forwarding_FatTree(Ptr<Packet> packet,
 	std::string reRoutingKey = i2s(dstId.id_pod) + i2s(dstId.id_switch)
 			+ i2s(dstId.id_level) + i2s(turningId.id_pod)
 			+ i2s(turningId.id_switch) + i2s(turningId.id_level);
-	std::cout << "rerouting key = " << reRoutingKey << std::endl;
+//	std::cout << "rerouting key = " << reRoutingKey << std::endl;
 
 	// Must use pointer to refer to the SAME map! Otherwise it's just a copy of the original map.
 	std::map<std::string, uint32_t>* reRoutingMap =
 			&this->GetNode()->reRoutingMap;
 	if (reRoutingMap->find(reRoutingKey) != reRoutingMap->end()) {
 		oif = (*reRoutingMap)[reRoutingKey];
-		std::cout << "*********************Rerouting to oif=" << oif
-				<< "!*************" << "\n";
+//		std::cout << "*********************Rerouting to oif=" << oif
+//				<< "!*************" << "\n";
 
 		return oif;
 	}
@@ -587,7 +587,7 @@ uint32_t PointToPointNetDevice::Forwarding_FatTree(Ptr<Packet> packet,
 	bool isNormal = IsForwarding_FatTree(nodeId, dstId, iif) && IsNotFailure_FatTree(nodeId, normalOif);
 	if (isNormal) {
 		oif = normalOif;
-		std::cout << "forward to oif = " << oif << std::endl;
+//		std::cout << "forward to oif = " << oif << std::endl;
 	} else {   // failure happens
 //		nodeId.Print(std::cout);
 		std::cout << "backward\n";
@@ -635,12 +635,12 @@ uint32_t PointToPointNetDevice::Forwarding_FatTree(Ptr<Packet> packet,
 				oif--;
 			//std::cout<<"after retouing oif = " <<oif <<std::endl;
 			(*reRoutingMap)[reRoutingKey] = oif;
-			std::cout << "add to rerouting map = " << std::endl;
-			for (std::map<std::string, uint32_t>::const_iterator it =
-					reRoutingMap->begin(); it != reRoutingMap->end(); ++it) {
-				std::cout << "key=" << it->first << "; oif=" << it->second
-						<< "\n";
-			}
+////			std::cout << "add to rerouting map = " << std::endl;
+//			for (std::map<std::string, uint32_t>::const_iterator it =
+//					reRoutingMap->begin(); it != reRoutingMap->end(); ++it) {
+//				std::cout << "key=" << it->first << "; oif=" << it->second
+//						<< "\n";
+//			}
 			break;
 		default:
 			std::cout

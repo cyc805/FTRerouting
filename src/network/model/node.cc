@@ -181,6 +181,38 @@ void TimeStampTag::Print(std::ostream &os) const {
 	std::cout << "Start time is: " << time << std::endl;
 }
 
+PacketSumTag::PacketSumTag() :
+		Tag() {
+	delaySum = 1;
+	nPkt = 0;
+}
+PacketSumTag::PacketSumTag(uint32_t nPkt_ ,double delaySum_) {
+	this->delaySum = delaySum_;
+	this->nPkt = nPkt_;
+}
+TypeId PacketSumTag::GetTypeId(void) {
+	static TypeId tid =
+			TypeId("ns3::PacketSumTag").SetParent<Tag>().AddConstructor<
+			PacketSumTag>();
+	return tid;
+}
+TypeId PacketSumTag::GetInstanceTypeId(void) const {
+	return GetTypeId();
+}
+uint32_t PacketSumTag::GetSerializedSize(void) const {
+	return sizeof(double) +sizeof(uint32_t);
+}
+void PacketSumTag::Serialize(TagBuffer i) const {
+	i.WriteU32(nPkt);
+	i.WriteDouble(delaySum);
+}
+void PacketSumTag::Deserialize(TagBuffer i) {
+	nPkt = i.ReadU32();
+	delaySum = i.ReadDouble();
+}
+void PacketSumTag::Print(std::ostream &os) const {
+	std::cout << "DelaySum and number of packet are: " << delaySum <<" , "<<nPkt<< std::endl;
+}
 /*----------------------------------------------------------------------------------------*/
 
 /*

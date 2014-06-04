@@ -654,16 +654,16 @@ void Ipv4L3Protocol::SendRealOut(Ptr<Ipv4Route> route, Ptr<Packet> packet,
 	if (nodeIsServer) {    // add Tag for sender only
 		Ipv4Address dstIp = ipHeader.GetDestination();
 		Ipv4Address srcIp = ipHeader.GetSource();
-		std::cout << srcIp << "->" << dstIp << std::endl;
+		//std::cout << srcIp << "->" << dstIp << std::endl;
 		NodeId nodeId_dst = IpServerMap[dstIp]->nodeId_FatTree;
 		NodeId nodeId_src = IpServerMap[srcIp]->nodeId_FatTree;
 		NodeId nodeId_turning;
 		double time = Simulator::Now().GetSeconds();
-		TimeTag timeTag = TimeTag(time);
-		std::cout << "src node=";
-		nodeId_src.Print(std::cout);
-		std::cout << "dst node=";
-		nodeId_dst.Print(std::cout);
+		TimeStampTag timeTag = TimeStampTag(time);
+//		std::cout << "src node=";
+//		nodeId_src.Print(std::cout);
+//		std::cout << "dst node=";
+//		nodeId_dst.Print(std::cout);
 		// add a new destination node id tag to the packet.
 		packet->AddPacketTag(
 				DstIdTag(nodeId_dst.id_pod, nodeId_dst.id_switch,
@@ -672,25 +672,40 @@ void Ipv4L3Protocol::SendRealOut(Ptr<Ipv4Route> route, Ptr<Packet> packet,
 		packet->AddPacketTag(
 				SrcIdTag(nodeId_src.id_pod, nodeId_src.id_switch,
 						nodeId_src.id_level));
-
-		nodeId_turning.id_pod = 0;    //TODO
-		nodeId_turning.id_switch = 0;    //TODO
-		if (nodeId_dst.id_pod != nodeId_src.id_pod) {
-			nodeId_turning.id_level = 0;
-		} else if (nodeId_dst.id_switch != nodeId_src.id_switch) {
-			nodeId_turning.id_level = 1;
+		bool isTarget1 = (nodeId_dst == NodeId(0, 1, 1))
+				&& (nodeId_src == NodeId(2, 0, 0));
+		bool isTarget2 = (nodeId_dst == NodeId(2, 0, 0))
+				&& (nodeId_src == NodeId(0, 1, 1));
+		bool isTarget = isTarget1 || isTarget2;
+		if (isTarget) {
+			nodeId_turning.id_pod = 0;    //TODO
+			nodeId_turning.id_switch = 0;    //TODO
+			if (nodeId_dst.id_pod != nodeId_src.id_pod) {
+				nodeId_turning.id_level = 0;
+			} else if (nodeId_dst.id_switch != nodeId_src.id_switch) {
+				nodeId_turning.id_level = 1;
+			} else {
+				nodeId_turning.id_level = 2;
+			}
 		} else {
-			nodeId_turning.id_level = 2;
+			nodeId_turning.id_pod = 2;    //TODO
+			nodeId_turning.id_switch = 1;    //TODO
+			if (nodeId_dst.id_pod != nodeId_src.id_pod) {
+				nodeId_turning.id_level = 0;
+			} else if (nodeId_dst.id_switch != nodeId_src.id_switch) {
+				nodeId_turning.id_level = 1;
+			} else {
+				nodeId_turning.id_level = 2;
+			}
 		}
-
 		packet->AddPacketTag(
 				TurningIdTag(nodeId_turning.id_pod, nodeId_turning.id_switch,
 						nodeId_turning.id_level));
-		std::cout << "turning node=";
-		nodeId_turning.Print(std::cout);
-		packet->AddPacketTag(TimeTag(time));
-		timeTag.Print(std::cout);
-		std::cout << "tag added!" << std::endl;
+//		std::cout << "turning node=";
+//		nodeId_turning.Print(std::cout);
+		packet->AddPacketTag(TimeStampTag(time));
+//		timeTag.Print(std::cout);
+//		std::cout << "tag added!" << std::endl;
 	}
 	/*-----------------------------------------------------------------*/
 
@@ -750,7 +765,7 @@ void Ipv4L3Protocol::SendRealOut(Ptr<Ipv4Route> route, Ptr<Packet> packet,
 
 void Ipv4L3Protocol::IpMulticastForward(Ptr<Ipv4MulticastRoute> mrtentry,
 		Ptr<const Packet> p, const Ipv4Header &header) {
-	NS_LOG_FUNCTION(this << mrtentry << p << header); NS_LOG_LOGIC("Multicast forwarding logic for node: " << m_node->GetId());
+	NS_LOG_FUNCTION(this << mrtentry << p << header);NS_LOG_LOGIC("Multicast forwarding logic for node: " << m_node->GetId());
 
 	std::map<uint32_t, uint32_t> ttlMap = mrtentry->GetOutputTtlMap();
 	std::map<uint32_t, uint32_t>::iterator mapIter;
@@ -767,7 +782,7 @@ void Ipv4L3Protocol::IpMulticastForward(Ptr<Ipv4MulticastRoute> mrtentry,
 			m_dropTrace(header, packet, DROP_TTL_EXPIRED,
 					m_node->GetObject<Ipv4>(), interfaceId);
 			return;
-		} NS_LOG_LOGIC("Forward multicast via interface " << interfaceId);
+		}NS_LOG_LOGIC("Forward multicast via interface " << interfaceId);
 		Ptr<Ipv4Route> rtentry = Create<Ipv4Route>();
 		rtentry->SetSource(h.GetSource());
 		rtentry->SetDestination(h.GetDestination());
@@ -782,7 +797,7 @@ void Ipv4L3Protocol::IpMulticastForward(Ptr<Ipv4MulticastRoute> mrtentry,
 
 void Ipv4L3Protocol::IpForward(Ptr<Ipv4Route> rtentry, Ptr<const Packet> p,
 		const Ipv4Header &header) {
-	NS_LOG_FUNCTION(this << rtentry << p << header); NS_LOG_LOGIC("Forwarding logic for node: " << m_node->GetId());
+	NS_LOG_FUNCTION(this << rtentry << p << header);NS_LOG_LOGIC("Forwarding logic for node: " << m_node->GetId());
 	// Forwarding
 	Ipv4Header ipHeader = header;
 	Ptr<Packet> packet = p->Copy();
@@ -795,7 +810,7 @@ void Ipv4L3Protocol::IpForward(Ptr<Ipv4Route> rtentry, Ptr<const Packet> p,
 				&& ipHeader.GetDestination().IsMulticast() == false) {
 			Ptr<Icmpv4L4Protocol> icmp = GetIcmp();
 			icmp->SendTimeExceededTtl(ipHeader, packet);
-		} NS_LOG_WARN("TTL exceeded.  Drop.");
+		}NS_LOG_WARN("TTL exceeded.  Drop.");
 		m_dropTrace(header, packet, DROP_TTL_EXPIRED, m_node->GetObject<Ipv4>(),
 				interface);
 		return;
@@ -816,7 +831,7 @@ void Ipv4L3Protocol::LocalDeliver(Ptr<const Packet> packet, Ipv4Header const&ip,
 		isPacketComplete = ProcessFragment(p, ipHeader, iif);
 		if (isPacketComplete == false) {
 			return;
-		} NS_LOG_LOGIC("Got last fragment, Packet is complete " << *p);
+		}NS_LOG_LOGIC("Got last fragment, Packet is complete " << *p);
 	}
 
 	m_localDeliverTrace(ip, packet, iif);
@@ -953,7 +968,7 @@ Ipv4Address Ipv4L3Protocol::SelectSourceAddress(Ptr<const NetDevice> device,
 				return iaddr.GetLocal();
 			}
 		}
-	} NS_LOG_WARN("Could not find source address for " << dst << " and scope "
+	}NS_LOG_WARN("Could not find source address for " << dst << " and scope "
 			<< scope << ", returning 0");
 	return addr;
 }
@@ -1046,7 +1061,7 @@ bool Ipv4L3Protocol::GetWeakEsModel(void) const {
 
 void Ipv4L3Protocol::RouteInputError(Ptr<const Packet> p,
 		const Ipv4Header & ipHeader, Socket::SocketErrno sockErrno) {
-	NS_LOG_FUNCTION(this << p << ipHeader << sockErrno); NS_LOG_LOGIC("Route input failure-- dropping packet to " << ipHeader << " with errno " << sockErrno);
+	NS_LOG_FUNCTION(this << p << ipHeader << sockErrno);NS_LOG_LOGIC("Route input failure-- dropping packet to " << ipHeader << " with errno " << sockErrno);
 	m_dropTrace(ipHeader, p, DROP_ROUTE_ERROR, m_node->GetObject<Ipv4>(), 0);
 }
 

@@ -22,6 +22,8 @@
 #include "ns3/fatal-error.h"
 #include "ns3/log.h"
 #include "tcp-rx-buffer.h"
+#include "ns3/node.h"
+#include "ns3/simulator.h"
 
 NS_LOG_COMPONENT_DEFINE ("TcpRxBuffer");
 
@@ -279,7 +281,7 @@ TcpRxBuffer::Extract (uint32_t maxSize)
 
   /*------------------------Chunzhi------------------------------*/
   	// "outPkt" may consists of multiple segments
-  	outPkt->AddPacketTag(TimeStampTag(nSegments, delaySum));
+  	outPkt->AddPacketTag(PacketSumTag(nSegments, delaySum));
   	/*-------------------------------------------------------------*/
   return outPkt;
 }

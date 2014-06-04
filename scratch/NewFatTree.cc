@@ -46,7 +46,7 @@ void setFailure(void) {
 }
 void clearFailure(NodeContainer switchAll) {
 	FailNode_oif_map.clear();
-	for(uint i =0; i < switchAll.GetN(); i++){
+	for (uint i = 0; i < switchAll.GetN(); i++) {
 		switchAll.Get(i)->reRoutingMap.clear();
 	}
 
@@ -57,7 +57,11 @@ int main(int argc, char *argv[]) {
 	Config::SetDefault("ns3::OnOffApplication::PacketSize", UintegerValue(210));
 	Config::SetDefault("ns3::OnOffApplication::DataRate",
 			StringValue("448kb/s"));
+	Config::SetDefault("ns3::DropTailQueue::Mode",
+			EnumValue(ns3::Queue::QUEUE_MODE_BYTES));
 
+	// output-queued switch buffer size (max bytes of each fifo queue)
+	Config::SetDefault("ns3::DropTailQueue::MaxBytes", UintegerValue(15000));
 	CommandLine cmd;
 	bool enableMonitor = true;
 	cmd.AddValue("EnableMonitor", "Enable Flow Monitor", enableMonitor);
@@ -88,7 +92,7 @@ int main(int argc, char *argv[]) {
 	// Point to Point Helper to all the links in fat-tree include the server subnets
 	PointToPointHelper p2p;
 	p2p.SetDeviceAttribute("DataRate", StringValue("5Mbps"));
-	p2p.SetChannelAttribute("Delay", StringValue("10ms"));
+	p2p.SetChannelAttribute("Delay", StringValue("1ms"));
 
 	// First create four set of Level-0 subnets
 	uint32_t ip1;
@@ -109,7 +113,7 @@ int main(int argc, char *argv[]) {
 //						i * (Port_num * Port_num / 4) + j * (Port_num / 2) + k)->SetId_FatTree(
 //						i, j, k); // labling the host server
 
-				serverNode->nodeId_FatTree = NodeId(i, j, k);  // labling the host server
+				serverNode->nodeId_FatTree = NodeId(i, j, k); // labling the host server
 				node.Add(node_l2switch.Get(i * (Port_num / 2) + j));
 				link = p2p.Install(node);
 				// assign the ip address of the two device.
@@ -231,23 +235,43 @@ int main(int argc, char *argv[]) {
 //	clientApps3.Start(Seconds(10.0));
 //	clientApps3.Stop(Seconds(13.0));
 
-
 	uint16_t port;
-	port =20;
+	port = 20;
 	//---------------------------------Bulk and Sink Application-------------------------------//
-	BulkSendHelper source("ns3::TcpSocketFactory",(InetSocketAddress(Ipv4Address("10.0.193.17"),port)));
+	BulkSendHelper sourceTarget("ns3::TcpSocketFactory",
+			(InetSocketAddress(Ipv4Address("10.0.193.17"), port)));
+	BulkSendHelper source1("ns3::TcpSocketFactory",
+			(InetSocketAddress(Ipv4Address("10.0.193.33"), port)));
+	double startTime = 0.5;
+	double stopTime = 100;
+	sourceTarget.SetAttribute("MaxBytes", UintegerValue(0));
+	source1.SetAttribute("MaxBytes", UintegerValue(0));
+	ApplicationContainer sourceAppsTarget = sourceTarget.Install(node_server.Get(32));
+	sourceAppsTarget.Start(Seconds(startTime));
+	sourceAppsTarget.Stop(Seconds(stopTime));
+	ApplicationContainer sourceApps1 = source1.Install(node_server.Get(18));
+	sourceApps1.Start(Seconds(startTime));
+	sourceApps1.Stop(Seconds(stopTime));
+//	ApplicationContainer sourceApps2 = source1.Install(node_server.Get(23));
+//	sourceApps2.Start(Seconds(startTime));
+//	sourceApps2.Stop(Seconds(stopTime));
 
 
-	source.SetAttribute("MaxBytes", UintegerValue(5000));
-	ApplicationContainer sourceApps = source.Install(node_server.Get(32));
+	PacketSinkHelper sinkTarget("ns3::TcpSocketFactory",
+			(InetSocketAddress(Ipv4Address("10.0.193.17"), port)));
+	ApplicationContainer sinkAppsTarget = sinkTarget.Install(node_server.Get(5));
+	sinkAppsTarget.Start(Seconds(startTime));
+	sinkAppsTarget.Stop(Seconds(stopTime));
+	PacketSinkHelper sink1("ns3::TcpSocketFactory",
+			(InetSocketAddress(Ipv4Address("10.0.193.33"), port)));
+	ApplicationContainer sinkApps1 = sink1.Install(node_server.Get(6));
+	sinkApps1.Start(Seconds(startTime));
+	sinkApps1.Stop(Seconds(stopTime));
+//	ApplicationContainer sinkApps2 = sink1.Install(node_server.Get(6));
+//	sinkApps2.Start(Seconds(startTime));
+//	sinkApps2.Stop(Seconds(stopTime));
 
-	sourceApps.Start(Seconds(0.5));
-	sourceApps.Stop(Seconds(20.0));
-	PacketSinkHelper sink("ns3::TcpSocketFactory", (InetSocketAddress(Ipv4Address("10.0.193.17"),port)));
-	ApplicationContainer sinkApps = sink.Install(node_server.Get(5));
 
-	sinkApps.Start(Seconds(0.5));
-	sinkApps.Stop(Seconds(20.0));
 
 //	p2p.EnablePcap("server tracing", node_server.Get(5)->GetDevice(1),true);
 //	p2p.EnablePcap("server tracing2", node_server.Get(32)->GetDevice(1),true);
@@ -257,17 +281,48 @@ int main(int argc, char *argv[]) {
 	switchAll.Add(node_l2switch);
 	switchAll.Add(node_l1switch);
 	switchAll.Add(node_l0switch);
-//	Simulator::Schedule(Seconds(1.0), setFailure);
-//	Simulator::Schedule(Seconds(5.0), clearFailure, switchAll);
-//	Simulator::Schedule(Seconds(9.0), setFailure);
+	Simulator::Schedule(Seconds(5.0), setFailure);
+	Simulator::Schedule(Seconds(10.0), clearFailure, switchAll);
+	Simulator::Schedule(Seconds(50.0), setFailure);
 
-	Simulator::Stop(Seconds(20.0));
+	Simulator::Stop(Seconds(stopTime + 1));
 	Simulator::Run();
 	Simulator::Destroy();
-	PacketSink* sinkStatistic = dynamic_cast<PacketSink*>(&(*sinkApps.Get(0)));
-	std::cout<<"total size : "<<sinkStatistic->GetTotalRx()<<std::endl;
-	std::cout<<"total number of packets : "<<sinkStatistic->packetN <<std::endl;
-	std::cout<<"total delay is : "<<sinkStatistic->totalDelay<<std::endl;
+	PacketSink* sinkStatisticTarget = dynamic_cast<PacketSink*>(&(*sinkAppsTarget.Get(0)));
+	PacketSink* sinkStatisticCompare1 = dynamic_cast<PacketSink*>(&(*sinkApps1.Get(0)));
+//	PacketSink* sinkStatisticCompare2 = dynamic_cast<PacketSink*>(&(*sinkApps2.Get(0)));
+	std::cout<<"the target one: --------------------------------"<<std::endl;
+	std::cout << "total size : " << sinkStatisticTarget->GetTotalRx() << std::endl;
+	std::cout << "total number of packets : " << sinkStatisticTarget->packetN
+			<< std::endl;
+	std::cout << "total delay is : " << sinkStatisticTarget->totalDelay << std::endl;
+	std::cout << "average delay is : "
+			<< sinkStatisticTarget->totalDelay / sinkStatisticTarget->packetN << std::endl;
+	std::cout << "Goodput is : "
+			<< (sinkStatisticTarget->GetTotalRx() / (stopTime - startTime)) * 8.0
+					/ 1000.0 << " kbps" << std::endl;
+	/*--------------------------------Compare 1------------------------------------------*/
+	std::cout<<"the compare 1 : --------------------------------"<<std::endl;
+	std::cout << "total size : " << sinkStatisticCompare1->GetTotalRx() << std::endl;
+	std::cout << "total number of packets : " << sinkStatisticCompare1->packetN
+			<< std::endl;
+	std::cout << "total delay is : " << sinkStatisticCompare1->totalDelay << std::endl;
+	std::cout << "average delay is : "
+			<< sinkStatisticCompare1->totalDelay / sinkStatisticCompare1->packetN << std::endl;
+	std::cout << "Goodput is : "
+			<< (sinkStatisticCompare1->GetTotalRx() / (stopTime - startTime)) * 8.0
+					/ 1000.0 << " kbps" << std::endl;
+	/*--------------------------------Compare 2------------------------------------------*/
+//	std::cout<<"the compare 2 : --------------------------------"<<std::endl;
+//	std::cout << "total size : " << sinkStatisticCompare2->GetTotalRx() << std::endl;
+//	std::cout << "total number of packets : " << sinkStatisticCompare2->packetN
+//			<< std::endl;
+//	std::cout << "total delay is : " << sinkStatisticCompare2->totalDelay << std::endl;
+//	std::cout << "average delay is : "
+//			<< sinkStatisticCompare2->totalDelay / sinkStatisticCompare2->packetN << std::endl;
+//	std::cout << "Goodput is : "
+//			<< (sinkStatisticCompare2->GetTotalRx() / (stopTime - startTime)) * 8.0
+//					/ 1000.0 << " kbps" << std::endl;
 //	delete []Pod;
 //	//Pod = NULL;
 
