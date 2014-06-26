@@ -47,57 +47,58 @@ class Socket;
  * For example, TCP sockets can be used, but 
  * UDP sockets can not be used.
  */
-class BulkSendApplication : public Application
-{
+class BulkSendApplication: public Application {
 public:
-  static TypeId GetTypeId (void);
+	static TypeId GetTypeId(void);
 
-  BulkSendApplication ();
+	BulkSendApplication();
 
-  virtual ~BulkSendApplication ();
+	virtual ~BulkSendApplication();
 
-  /**
-   * \param maxBytes the upper bound of bytes to send
-   *
-   * Set the upper bound for the total number of bytes to send. Once 
-   * this bound is reached, no more application bytes are sent. If the 
-   * application is stopped during the simulation and restarted, the 
-   * total number of bytes sent is not reset; however, the maxBytes 
-   * bound is still effective and the application will continue sending 
-   * up to maxBytes. The value zero for maxBytes means that 
-   * there is no upper bound; i.e. data is sent until the application 
-   * or simulation is stopped.
-   */
-  void SetMaxBytes (uint32_t maxBytes);
+	/**
+	 * \param maxBytes the upper bound of bytes to send
+	 *
+	 * Set the upper bound for the total number of bytes to send. Once
+	 * this bound is reached, no more application bytes are sent. If the
+	 * application is stopped during the simulation and restarted, the
+	 * total number of bytes sent is not reset; however, the maxBytes
+	 * bound is still effective and the application will continue sending
+	 * up to maxBytes. The value zero for maxBytes means that
+	 * there is no upper bound; i.e. data is sent until the application
+	 * or simulation is stopped.
+	 */
+	void SetMaxBytes(uint32_t maxBytes);
 
-  /**
-   * \return pointer to associated socket
-   */
-  Ptr<Socket> GetSocket (void) const;
+	/**
+	 * \return pointer to associated socket
+	 */
+	Ptr<Socket> GetSocket(void) const;
 
 protected:
-  virtual void DoDispose (void);
+	virtual void DoDispose(void);
 private:
-  // inherited from Application base class.
-  virtual void StartApplication (void);    // Called at time specified by Start
-  virtual void StopApplication (void);     // Called at time specified by Stop
+	// inherited from Application base class.
+	virtual void StartApplication(void);    // Called at time specified by Start
+	virtual void StopApplication(void);     // Called at time specified by Stop
 
-  void SendData ();
+	void SendData();
 
-  Ptr<Socket>     m_socket;       // Associated socket
-  Address         m_peer;         // Peer address
-  bool            m_connected;    // True if connected
-  uint32_t        m_sendSize;     // Size of data to send each time
-  uint32_t        m_maxBytes;     // Limit total number of bytes sent
-  uint32_t        m_totBytes;     // Total bytes sent so far
-  TypeId          m_tid;
-  TracedCallback<Ptr<const Packet> > m_txTrace;
+	Ptr<Socket> m_socket;       // Associated socket
+	Address m_peer;         // Peer address
+	bool m_connected;    // True if connected
+	uint32_t m_sendSize;     // Size of data to send each time
+	uint32_t m_maxBytes;     // Limit total number of bytes sent
+	uint32_t m_totBytes;     // Total bytes sent so far
+	TypeId m_tid;
+	TracedCallback<Ptr<const Packet> > m_txTrace;
+
+	std::string m_cwndOutputFile; // Chunzhi
 
 private:
-  void ConnectionSucceeded (Ptr<Socket> socket);
-  void ConnectionFailed (Ptr<Socket> socket);
-  void DataSend (Ptr<Socket>, uint32_t); // for socket's SetSendCallback
-  void Ignore (Ptr<Socket> socket);
+	void ConnectionSucceeded(Ptr<Socket> socket);
+	void ConnectionFailed(Ptr<Socket> socket);
+	void DataSend(Ptr<Socket>, uint32_t); // for socket's SetSendCallback
+	void Ignore(Ptr<Socket> socket);
 };
 
 } // namespace ns3

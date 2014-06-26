@@ -32,6 +32,7 @@
 #include "ns3/udp-socket-factory.h"
 #include "packet-sink.h"
 
+double collectTime;
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE("PacketSink");
@@ -144,12 +145,15 @@ void PacketSink::HandleRead(Ptr<Socket> socket) {
 		if (packet->GetSize() == 0) { //EOF
 			break;
 		}
-		m_totalRx += packet->GetSize();
+
 		/*------------------------By Zhiyong--------------------------------*/
-		PacketSumTag pktSum;
-		NS_ASSERT(packet->RemovePacketTag(pktSum));
-		packetN += pktSum.nPkt;
-		totalDelay += pktSum.delaySum;
+		if (Simulator::Now().GetSeconds() >= collectTime) {
+			m_totalRx += packet->GetSize();
+			PacketSumTag pktSum;
+			NS_ASSERT(packet->RemovePacketTag(pktSum));
+			packetN += pktSum.nPkt;
+			totalDelay += pktSum.delaySum;
+		}
 		/*------------------------------------------------------------------*/
 		if (InetSocketAddress::IsMatchingType(from)) {
 			NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds ()

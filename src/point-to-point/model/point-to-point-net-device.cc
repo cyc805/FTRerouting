@@ -376,12 +376,12 @@ void PointToPointNetDevice::Receive(Ptr<Packet> packet) {
 			uint32_t oifIndex = Forwarding_FatTree(packet, this->GetIfIndex());
 			//			uint32_t oifIndex = 1;Forwarding_FatTree(const  Packet & packet, uint32_t iif)
 
-			//			std::cout<<"oif = " <<oifIndex <<std::endl;
+//						std::cout<<"oif = " <<oifIndex <<std::endl;
 			ns3::NodeId nodeIdFatTree = this->GetNode()->nodeId_FatTree;
-			uint32_t normalOif = NormalForwarding_FatTree(
-					nodeIdFatTree, dstIdTag, srcIdTag,
-					turningIdTag);
-			if (IsForwarding_FatTree(nodeIdFatTree, dstIdTag, this->GetIfIndex())
+			uint32_t normalOif = NormalForwarding_FatTree(nodeIdFatTree,
+					dstIdTag, srcIdTag, turningIdTag);
+			if (IsForwarding_FatTree(nodeIdFatTree, dstIdTag,
+					this->GetIfIndex())
 					&& IsNotFailure_FatTree(nodeIdFatTree, normalOif)) {
 				NS_ASSERT(node->GetDevice(oifIndex) != this);
 			}
@@ -447,25 +447,30 @@ IdTag dstId, IdTag srcId, IdTag turningId) { // judge the upstream and downstrea
 				else
 					oif = temp % (Port_num / 2) + Port_num + 1;
 			} else {
-				int temp = (turningId.id_pod * (Port_num / 2)
-						+ turningId.id_switch)
-						- (nodeId.id_pod % (Port_num / 2)) * (Port_num / 2);
-				if (temp >= 0)
-					oif = (turningId.id_pod * (Port_num / 2)
-							+ turningId.id_switch) / (Port_num / 2)
-							+ Port_num / 2 + 1;
-				else {
-					if ((turningId.id_pod * (Port_num / 2) + turningId.id_switch)
-							% (Port_num / 2) >= 1)
-						oif = (turningId.id_pod * (Port_num / 2)
-								+ turningId.id_switch) / (Port_num / 2)
-								+ Port_num / 2;
-					else
-						oif = Port_num;
+//				int temp = (turningId.id_pod * (Port_num / 2)
+//						+ turningId.id_switch)
+//						- (nodeId.id_pod % (Port_num / 2)) * (Port_num / 2);
+//				if (temp >= 0)
+//					oif = (turningId.id_pod * (Port_num / 2)
+//							+ turningId.id_switch) / (Port_num / 2)
+//							+ Port_num / 2 + 1;
+//				else {
+//					if ((turningId.id_pod * (Port_num / 2) + turningId.id_switch)
+//							% (Port_num / 2) >= 1)
+//						oif = (turningId.id_pod * (Port_num / 2)
+//								+ turningId.id_switch) / (Port_num / 2)
+//								+ Port_num / 2;
+//					else
+//						oif = Port_num;
+//				oif = temp / (Port_num / 2) + Port_num / 2 + 1;
+				int temp = turningId.id_pod - nodeId.id_pod % (Port_num / 2);
+				if (temp >= 0) {
+					oif = temp + Port_num / 2 + 1;
+				} else {
+					oif = temp + Port_num + 1;
 				}
-				oif = temp / (Port_num / 2) + Port_num / 2 + 1;
-
 			}
+//			}
 			break;
 		case 2:
 			if (nodeId.id_pod < Port_num / 2) {
@@ -476,22 +481,32 @@ IdTag dstId, IdTag srcId, IdTag turningId) { // judge the upstream and downstrea
 				else
 					oif = Port_num;
 			} else {
-				int temp = (turningId.id_pod * (Port_num / 2)
-						+ turningId.id_switch)
-						- (nodeId.id_pod % (Port_num / 2)) * (Port_num / 2);
-				if (temp >= 0)
-					oif = (turningId.id_pod * (Port_num / 2)
-							+ turningId.id_switch) % (Port_num / 2)
-							+ Port_num / 2 + 1;
-				else {
-					if ((turningId.id_pod * (Port_num / 2) + turningId.id_switch)
-							% (Port_num / 2) >= 1)
-						oif = (turningId.id_pod * (Port_num / 2)
-								+ turningId.id_switch) % (Port_num / 2)
-								+ Port_num / 2;
-					else
+//				int temp = (turningId.id_pod * (Port_num / 2)
+//						+ turningId.id_switch)
+//						- (nodeId.id_pod % (Port_num / 2)) * (Port_num / 2);
+//				if (temp >= 0)
+//					oif = (turningId.id_pod * (Port_num / 2)
+//							+ turningId.id_switch) % (Port_num / 2)
+//							+ Port_num / 2 + 1;
+//				else {
+//					if ((turningId.id_pod * (Port_num / 2) + turningId.id_switch)
+//							% (Port_num / 2) >= 1)
+//						oif = (turningId.id_pod * (Port_num / 2)
+//								+ turningId.id_switch) % (Port_num / 2)
+//								+ Port_num / 2;
+//					else
+//						oif = Port_num;
+				int temp = turningId.id_pod - nodeId.id_pod % (Port_num / 2);
+				if (temp >= 0) {
+					oif = turningId.id_switch + Port_num / 2 + 1;
+				} else {
+					if (turningId.id_switch == 0) {
 						oif = Port_num;
+					} else {
+						oif = turningId.id_switch + Port_num / 2;
+					}
 				}
+
 			}
 			break;
 		default:
@@ -536,8 +551,12 @@ bool PointToPointNetDevice::IsForwarding_FatTree(NodeId nodeId, IdTag dstId,
 //			&& (FailNode_oif_map[failNodeKey] == normalOif)) {
 //		return false;
 //	}
-	 if ((nodeId.id_level == 0) && ((iif - 1) == dstId.id_pod)) { // iif starts from 1, but podId start from 0.
-		return false;
+	if (nodeId.id_level == 0) {
+		if ((nodeId.id_level == 0) && ((iif - 1) == dstId.id_pod)) { // iif starts from 1, but podId start from 0.
+			return false;
+		}
+		else
+			return true;
 	} else if ((iif > Port_num / 2) && (nodeId.id_pod != dstId.id_pod)) {
 		return false;
 	} else
@@ -584,7 +603,8 @@ uint32_t PointToPointNetDevice::Forwarding_FatTree(Ptr<Packet> packet,
 	}
 	uint32_t normalOif = NormalForwarding_FatTree(nodeId, dstId, srcId,
 			turningId);
-	bool isNormal = IsForwarding_FatTree(nodeId, dstId, iif) && IsNotFailure_FatTree(nodeId, normalOif);
+	bool isNormal = IsForwarding_FatTree(nodeId, dstId, iif)
+			&& IsNotFailure_FatTree(nodeId, normalOif);
 	if (isNormal) {
 		oif = normalOif;
 //		std::cout << "forward to oif = " << oif << std::endl;

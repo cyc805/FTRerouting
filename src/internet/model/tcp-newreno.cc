@@ -30,6 +30,8 @@
 
 NS_LOG_COMPONENT_DEFINE ("TcpNewReno");
 
+
+
 namespace ns3 {
 
 NS_OBJECT_ENSURE_REGISTERED (TcpNewReno);
@@ -61,6 +63,7 @@ TcpNewReno::TcpNewReno (void)
     m_limitedTx (false) // mute valgrind, actual value set by the attribute system
 {
   NS_LOG_FUNCTION (this);
+
 }
 
 TcpNewReno::TcpNewReno (const TcpNewReno& sock)
@@ -74,6 +77,9 @@ TcpNewReno::TcpNewReno (const TcpNewReno& sock)
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_LOGIC ("Invoked the copy constructor");
+
+
+
 }
 
 TcpNewReno::~TcpNewReno (void)

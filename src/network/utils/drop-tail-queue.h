@@ -58,7 +58,17 @@ public:
    * \returns The encapsulation mode of this device.
    */
   DropTailQueue::QueueMode GetMode (void);
-
+  void PrintDropCount(void);
+  uint32_t dropFor_18;
+  uint32_t dropFor_35;
+  uint32_t dropFor_20;
+  uint32_t dropFor_40;
+  uint32_t dropFor_21;
+  uint32_t inQueue_18;
+  uint32_t inQueue_35;
+  uint32_t inQueue_20;
+  uint32_t inQueue_40;
+  uint32_t inQueue_21;
 private:
   virtual bool DoEnqueue (Ptr<Packet> p);
   virtual Ptr<Packet> DoDequeue (void);
@@ -69,6 +79,10 @@ private:
   uint32_t m_maxBytes;
   uint32_t m_bytesInQueue;
   QueueMode m_mode;
+
+  uint32_t m_enableDropTrace; //by Chunzhi
+  bool isScheduled; // by Chunzhi
+
 };
 
 } // namespace ns3

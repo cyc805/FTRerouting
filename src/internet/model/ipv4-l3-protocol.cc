@@ -672,14 +672,71 @@ void Ipv4L3Protocol::SendRealOut(Ptr<Ipv4Route> route, Ptr<Packet> packet,
 		packet->AddPacketTag(
 				SrcIdTag(nodeId_src.id_pod, nodeId_src.id_switch,
 						nodeId_src.id_level));
-		bool isTarget1 = (nodeId_dst == NodeId(0, 1, 1))
-				&& (nodeId_src == NodeId(2, 0, 0));
-		bool isTarget2 = (nodeId_dst == NodeId(2, 0, 0))
-				&& (nodeId_src == NodeId(0, 1, 1));
+		bool isTarget1 = (nodeId_dst == NodeId(0, 1, 1)); //Set the turning SWID to be 000, if the packet is sent from 011 or send to 011.
+//				&& (nodeId_src == NodeId(2, 0, 0));
+		bool isTarget2 = (nodeId_src == NodeId(0, 1, 1));
+//				&& (nodeId_src == NodeId(0, 1, 1));
 		bool isTarget = isTarget1 || isTarget2;
 		if (isTarget) {
 			nodeId_turning.id_pod = 0;    //TODO
 			nodeId_turning.id_switch = 0;    //TODO
+			if (nodeId_dst.id_pod != nodeId_src.id_pod) {
+				nodeId_turning.id_level = 0;
+			} else if (nodeId_dst.id_switch != nodeId_src.id_switch) {
+				nodeId_turning.id_level = 1;
+			} else {
+				nodeId_turning.id_level = 2;
+			}
+		}
+//		if (nodeId_src == NodeId(2, 0, 3) || nodeId_dst == NodeId(2, 0, 3)) {// if Src or Dst is 203,nodeIndex(35), we set turningSWID 320;
+//			nodeId_turning.id_pod = 3;    //TODO
+//			nodeId_turning.id_switch = 2;    //TODO
+//			if (nodeId_dst.id_pod != nodeId_src.id_pod) {
+//				nodeId_turning.id_level = 0;
+//			} else if (nodeId_dst.id_switch != nodeId_src.id_switch) {
+//				nodeId_turning.id_level = 1;
+//			} else {
+//				nodeId_turning.id_level = 2;
+//			}
+//		} else if (nodeId_src == NodeId(1, 0, 2) // if Src or Dst is 110,nodeIndex(18), we set turningSWID 310;
+//		|| (nodeId_dst == NodeId(1, 0, 2))) {
+//			nodeId_turning.id_pod = 3;    //TODO
+//			nodeId_turning.id_switch = 1;    //TODO
+//			if (nodeId_dst.id_pod != nodeId_src.id_pod) {
+//				nodeId_turning.id_level = 0;
+//			} else if (nodeId_dst.id_switch != nodeId_src.id_switch) {
+//				nodeId_turning.id_level = 1;
+//			} else {
+//				nodeId_turning.id_level = 2;
+//			}
+//		}
+
+		else if (nodeId_src == NodeId(1, 1, 0) // if Src or Dst is 110,nodeIndex(20), we set turningSWID 310;
+		|| (nodeId_dst == NodeId(1, 1, 0))) {
+			nodeId_turning.id_pod = 3;    //TODO
+			nodeId_turning.id_switch = 1;    //TODO
+			if (nodeId_dst.id_pod != nodeId_src.id_pod) {
+				nodeId_turning.id_level = 0;
+			} else if (nodeId_dst.id_switch != nodeId_src.id_switch) {
+				nodeId_turning.id_level = 1;
+			} else {
+				nodeId_turning.id_level = 2;
+			}
+		} else if (nodeId_src == NodeId(1, 1, 1) // if Src or Dst is 111,nodeIndex(21), we set turningSWID 310;
+		|| (nodeId_dst == NodeId(1, 1, 1))) {
+			nodeId_turning.id_pod = 3;    //TODO
+			nodeId_turning.id_switch = 1;    //TODO
+			if (nodeId_dst.id_pod != nodeId_src.id_pod) {
+				nodeId_turning.id_level = 0;
+			} else if (nodeId_dst.id_switch != nodeId_src.id_switch) {
+				nodeId_turning.id_level = 1;
+			} else {
+				nodeId_turning.id_level = 2;
+			}
+		} else if (nodeId_src == NodeId(2, 2, 0) // if Src or Dst is 220,nodeIndex(40), we set turningSWID 320;
+		|| (nodeId_dst == NodeId(2, 2, 0))) {
+			nodeId_turning.id_pod = 3;    //TODO
+			nodeId_turning.id_switch = 2;    //TODO
 			if (nodeId_dst.id_pod != nodeId_src.id_pod) {
 				nodeId_turning.id_level = 0;
 			} else if (nodeId_dst.id_switch != nodeId_src.id_switch) {

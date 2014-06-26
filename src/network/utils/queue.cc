@@ -19,6 +19,8 @@
 #include "ns3/log.h"
 #include "ns3/trace-source-accessor.h"
 #include "queue.h"
+#include "ns3/node.h"
+#include "ns3/simulator.h"
 
 NS_LOG_COMPONENT_DEFINE ("Queue");
 
