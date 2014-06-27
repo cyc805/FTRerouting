@@ -161,6 +161,7 @@ TypeId PointToPointNetDevice::GetTypeId(void) {
 PointToPointNetDevice::PointToPointNetDevice() :
 		m_txMachineState(READY), m_channel(0), m_linkUp(false), m_currentPkt(0) {
 	NS_LOG_FUNCTION(this);
+	reRoutTemp = 0;
 }
 
 PointToPointNetDevice::~PointToPointNetDevice() {
@@ -610,10 +611,22 @@ uint32_t PointToPointNetDevice::Forwarding_FatTree(Ptr<Packet> packet,
 //		std::cout << "forward to oif = " << oif << std::endl;
 	} else {   // failure happens
 //		nodeId.Print(std::cout);
-		std::cout << "backward\n";
+		IsBackTag isbackId1;
+		IsBackTag isbackId2 = IsBackTag(1);
+		IsBackTag isbackId3;
+//		std::cout << "backward\n";
 		switch (nodeId.id_level) {
 		case 0: //go back to the source.
 			oif = NormalForwarding_FatTree(nodeId, srcId, dstId, turningId);
+
+			packet->PeekPacketTag(isbackId1);
+//			std::cout<<"old isbackId = "<<isbackId1.isBack;
+			packet->RemovePacketTag(isbackId1);
+
+			packet->AddPacketTag(isbackId2);
+//			std::cout<<" and the previous isbackId3 = "<<isbackId3.isBack;
+			packet->PeekPacketTag(isbackId3);
+//			std::cout<<"; And the new isbackId = "<<isbackId3.isBack<<std::endl;;
 			break;
 		case 1:
 
@@ -637,7 +650,7 @@ uint32_t PointToPointNetDevice::Forwarding_FatTree(Ptr<Packet> packet,
 			}
 			if (srcId.id_pod == nodeId.id_pod) {
 				(*reRoutingMap)[reRoutingKey] = oif;
-				std::cout << "add to rerouting map = " << std::endl;
+				std::cout << "add to rerouting map in level 1 switch = " << std::endl;
 				for (std::map<std::string, uint32_t>::const_iterator it =
 						reRoutingMap->begin(); it != reRoutingMap->end();
 						++it) {
@@ -648,19 +661,25 @@ uint32_t PointToPointNetDevice::Forwarding_FatTree(Ptr<Packet> packet,
 			break;
 		case 2:
 			oif = NormalForwarding_FatTree(nodeId, dstId, srcId, turningId);
+			reRoutTemp ++;
+			if(reRoutTemp == (Port_num/2 -1)){
+				reRoutTemp++;
+			}
+			oif = (oif + reRoutTemp)%(Port_num/2) + Port_num/2 +1;
 			//std::cout<<"herherhehrehrhehrherhehrhehrhehrherhehrhehrhehrh"<<"   oif = " <<oif<<std::endl;
-			if (oif != Port_num)
-				oif++;
-			else
-				oif--;
+//			if (oif >= Port_num)
+//				oif++;
+//			else
+//				oif--;
 			//std::cout<<"after retouing oif = " <<oif <<std::endl;
 			(*reRoutingMap)[reRoutingKey] = oif;
+			std::cout << "add to rerouting map in level 2 switch = " << std::endl;
 ////			std::cout << "add to rerouting map = " << std::endl;
-//			for (std::map<std::string, uint32_t>::const_iterator it =
-//					reRoutingMap->begin(); it != reRoutingMap->end(); ++it) {
-//				std::cout << "key=" << it->first << "; oif=" << it->second
-//						<< "\n";
-//			}
+			for (std::map<std::string, uint32_t>::const_iterator it =
+					reRoutingMap->begin(); it != reRoutingMap->end(); ++it) {
+				std::cout << "key=" << it->first << "; oif=" << it->second
+						<< "\n";
+			}
 			break;
 		default:
 			std::cout

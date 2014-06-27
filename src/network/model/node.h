@@ -115,7 +115,18 @@ public:
 	double delaySum;
 	uint32_t nPkt;
 };
-
+class IsBackTag: public Tag{ // this tag is used when this is a backwad packet
+public:
+	static TypeId GetTypeId(void);
+	virtual TypeId GetInstanceTypeId(void) const;
+	virtual uint32_t GetSerializedSize(void) const;
+	virtual void Serialize(TagBuffer i) const;
+	virtual void Deserialize(TagBuffer i);
+	virtual void Print(std::ostream &os) const;
+	IsBackTag();
+	IsBackTag(uint32_t isBack_);
+	uint32_t isBack;
+};
 /*--------------------------------------------------------------------------------------------*/
 /**
  * \ingroup network

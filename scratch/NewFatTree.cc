@@ -68,10 +68,11 @@ std::string i2s(uint i) {
 int main(int argc, char *argv[]) {
 	/*-------------------parameter setting----------------------*/
 	startTimeFatTree = 0.0;
-	stopTimeFatTree = 5000.0;
+	stopTimeFatTree = 100.0;
 	collectTime = 10.0;
-	selectedNode = 171; //Id 167 is the aggregate switch for flow(18->5) and flow(20->113)
+	selectedNode = 129; //Id 167 is the aggregate switch for flow(18->5) and flow(20->113)
 						//Id 171 is the aggregate switch for flow(35->5) and flow(40->100)
+						//Id 129 is the edge switch for flow(18->5) and flow(35->5)
 	double failTimeFatTree = collectTime;
 //Changes seed from default of 1 to a specific number
 
@@ -82,12 +83,15 @@ int main(int argc, char *argv[]) {
 //	Config::SetDefault("ns3::OnOffApplication::PacketSize", UintegerValue(210));
 //	Config::SetDefault("ns3::OnOffApplication::DataRate",
 //			StringValue("448kb/s"));
+	Config::SetDefault("ns3::DropTailQueue::Mode",
+			EnumValue(ns3::Queue::QUEUE_MODE_BYTES));
+//
 //	Config::SetDefault("ns3::DropTailQueue::Mode",
-//			EnumValue(ns3::Queue::QUEUE_MODE_BYTES));
+//			EnumValue(ns3::Queue::QUEUE_MODE_PACKETS));
 
 	// output-queued switch buffer size (max bytes of each fifo queue)
-//	Config::SetDefault("ns3::DropTailQueue::MaxBytes", UintegerValue(15000));
-	Config::SetDefault("ns3::DropTailQueue::MaxPackets", UintegerValue(24));
+	Config::SetDefault("ns3::DropTailQueue::MaxBytes", UintegerValue(15000));
+//	Config::SetDefault("ns3::DropTailQueue::MaxPackets", UintegerValue(25));
 //	Config::SetDefault("ns3::RedQueue::Mode",
 //			EnumValue(ns3::Queue::QUEUE_MODE_BYTES));
 //
@@ -278,9 +282,14 @@ int main(int argc, char *argv[]) {
 
 	uint16_t port;
 	port = 20;
-	Config::Set(
-			"/NodeList/" + i2s(selectedNode)
-					+ "/DeviceList/5/TxQueue/TraceDrop", UintegerValue(1));
+//	Config::Set("/NodeList/171/DeviceList/5/TxQueue/TraceDrop",
+//			UintegerValue(1));
+//	Config::Set("/NodeList/167/DeviceList/5/TxQueue/TraceDrop",
+//			UintegerValue(1));
+	Config::Set("/NodeList/129/DeviceList/2/TxQueue/TraceDrop",
+			UintegerValue(1));
+//	Config::Set("/NodeList/129/DeviceList/2/TxQueue/TraceDrop",
+//			UintegerValue(1));
 	//set failure schedule
 	NodeContainer switchAll;
 	switchAll.Add(node_l2switch);
@@ -294,21 +303,43 @@ int main(int argc, char *argv[]) {
 			(InetSocketAddress(Ipv4Address("10.0.193.17"), port)));
 	BulkSendHelper source1("ns3::TcpSocketFactory",
 			(InetSocketAddress(Ipv4Address("10.0.193.17"), port + 1)));
-	BulkSendHelper source2("ns3::TcpSocketFactory",
-			(InetSocketAddress(Ipv4Address("10.0.193.33"), port)));
+//	BulkSendHelper source2("ns3::TcpSocketFactory",
+//			(InetSocketAddress(Ipv4Address("10.0.193.33"), port)));
 	BulkSendHelper source3("ns3::TcpSocketFactory",
 			(InetSocketAddress(Ipv4Address("10.7.192.17"), port))); // Node(113)
 	BulkSendHelper source4("ns3::TcpSocketFactory",
 			(InetSocketAddress(Ipv4Address("10.6.193.1"), port))); //Node(100)
-	BulkSendHelper source5("ns3::TcpSocketFactory",
-			(InetSocketAddress(Ipv4Address("10.3.192.33"), port + 5))); // Node(50)
+//	BulkSendHelper source5("ns3::TcpSocketFactory",
+//			(InetSocketAddress(Ipv4Address("10.3.192.33"), port + 5))); // Node(50)
+	/*----------------------------------Test---------------------------------*/
+//	BulkSendHelper sourceTest("ns3::TcpSocketFactory",
+//			(InetSocketAddress(Ipv4Address("10.3.192.33"), port + 5))); // Node(50)
+//	sourceTest.SetAttribute("MaxBytes", UintegerValue(0));
+//	ApplicationContainer sourceAppsTest = sourceTest.Install(node_server.Get(78)); //NodeId(220)
+//	sourceAppsTest.Start(Seconds(startTimeFatTree));
+//	sourceAppsTest.Stop(Seconds(stopTimeFatTree));
+//
+//	BulkSendHelper sourceTest2("ns3::TcpSocketFactory",
+//			(InetSocketAddress(Ipv4Address("10.5.194.17"), port + 5))); // Node(50)
+//	sourceTest2.SetAttribute("MaxBytes", UintegerValue(0));
+//	ApplicationContainer sourceAppsTest2 = sourceTest2.Install(node_server.Get(122)); //NodeId(220)
+//	sourceAppsTest2.Start(Seconds(startTimeFatTree));
+//	sourceAppsTest2.Stop(Seconds(stopTimeFatTree));
+//
+//	PacketSinkHelper sinkTest2("ns3::TcpSocketFactory",
+//			(InetSocketAddress(Ipv4Address("10.5.194.17"), port + 5)));
+//	ApplicationContainer sinkAppsTest2 = sinkTest2.Install(node_server.Get(89));
+//	sinkAppsTest2.Start(Seconds(startTimeFatTree));
+//	sinkAppsTest2.Stop(Seconds(stopTimeFatTree));
+
+	/*------------------------------------------------------------------------*/
 
 	sourceTarget.SetAttribute("MaxBytes", UintegerValue(0));
 	source1.SetAttribute("MaxBytes", UintegerValue(0));
-	source2.SetAttribute("MaxBytes", UintegerValue(0));
+//	source2.SetAttribute("MaxBytes", UintegerValue(0));
 	source3.SetAttribute("MaxBytes", UintegerValue(0));
 	source4.SetAttribute("MaxBytes", UintegerValue(0));
-	source5.SetAttribute("MaxBytes", UintegerValue(0));
+//	source5.SetAttribute("MaxBytes", UintegerValue(0));
 	ApplicationContainer sourceAppsTarget = sourceTarget.Install(
 			node_server.Get(35));
 	sourceAppsTarget.Start(Seconds(startTimeFatTree));
@@ -316,35 +347,34 @@ int main(int argc, char *argv[]) {
 	ApplicationContainer sourceApps1 = source1.Install(node_server.Get(18));
 	sourceApps1.Start(Seconds(startTimeFatTree));
 	sourceApps1.Stop(Seconds(stopTimeFatTree));
-	ApplicationContainer sourceApps2 = source2.Install(node_server.Get(23));
-	sourceApps2.Start(Seconds(startTimeFatTree));
-	sourceApps2.Stop(Seconds(stopTimeFatTree));
+//	ApplicationContainer sourceApps2 = source2.Install(node_server.Get(23));
+//	sourceApps2.Start(Seconds(startTimeFatTree));
+//	sourceApps2.Stop(Seconds(stopTimeFatTree));
 	ApplicationContainer sourceApps3 = source3.Install(node_server.Get(20)); // NodeId(110)
 	sourceApps3.Start(Seconds(startTimeFatTree));
 	sourceApps3.Stop(Seconds(stopTimeFatTree));
 	ApplicationContainer sourceApps4 = source4.Install(node_server.Get(40)); //NodeId(220)
 	sourceApps4.Start(Seconds(startTimeFatTree));
 	sourceApps4.Stop(Seconds(stopTimeFatTree));
-	ApplicationContainer sourceApps5 = source5.Install(node_server.Get(21)); // NodeId(111)
-	sourceApps5.Start(Seconds(startTimeFatTree));
-	sourceApps5.Stop(Seconds(stopTimeFatTree));
+//	ApplicationContainer sourceApps5 = source5.Install(node_server.Get(21)); // NodeId(111)
+//	sourceApps5.Start(Seconds(startTimeFatTree));
+//	sourceApps5.Stop(Seconds(stopTimeFatTree));
 
-	BulkSendApplication* sendTarget =
-			dynamic_cast<BulkSendApplication*>(&(*sourceAppsTarget.Get(0)));
-	BulkSendApplication* send1 =
-			dynamic_cast<BulkSendApplication*>(&(*sourceApps1.Get(0)));
-	BulkSendApplication* send3 =
-			dynamic_cast<BulkSendApplication*>(&(*sourceApps3.Get(0)));
-	BulkSendApplication* send4 =
-			dynamic_cast<BulkSendApplication*>(&(*sourceApps4.Get(0)));
-	BulkSendApplication* send5 =
-			dynamic_cast<BulkSendApplication*>(&(*sourceApps5.Get(0)));
-	sendTarget->SetAttribute("TraceCwndOutputFile", StringValue("cwnd35.txt"));
-	send1->SetAttribute("TraceCwndOutputFile", StringValue("cwnd18.txt"));
-	send3->SetAttribute("TraceCwndOutputFile", StringValue("cwnd20.txt"));
-	send4->SetAttribute("TraceCwndOutputFile", StringValue("cwnd40.txt"));
-	send5->SetAttribute("TraceCwndOutputFile", StringValue("cwnd21.txt"));
-
+//	BulkSendApplication* sendTarget =
+//			dynamic_cast<BulkSendApplication*>(&(*sourceAppsTarget.Get(0)));
+//	BulkSendApplication* send1 =
+//			dynamic_cast<BulkSendApplication*>(&(*sourceApps1.Get(0)));
+//	BulkSendApplication* send3 =
+//			dynamic_cast<BulkSendApplication*>(&(*sourceApps3.Get(0)));
+//	BulkSendApplication* send4 =
+//			dynamic_cast<BulkSendApplication*>(&(*sourceApps4.Get(0)));
+////	BulkSendApplication* send5 =
+////			dynamic_cast<BulkSendApplication*>(&(*sourceApps5.Get(0)));
+//	sendTarget->SetAttribute("TraceCwndOutputFile", StringValue("cwnd35.txt"));
+//	send1->SetAttribute("TraceCwndOutputFile", StringValue("cwnd18.txt"));
+//	send3->SetAttribute("TraceCwndOutputFile", StringValue("cwnd20.txt"));
+//	send4->SetAttribute("TraceCwndOutputFile", StringValue("cwnd40.txt"));
+////	send5->SetAttribute("TraceCwndOutputFile", StringValue("cwnd21.txt"));
 
 	PacketSinkHelper sinkTarget("ns3::TcpSocketFactory",
 			(InetSocketAddress(Ipv4Address("10.0.193.17"), port)));
@@ -378,18 +408,18 @@ int main(int argc, char *argv[]) {
 	sinkApps5.Start(Seconds(startTimeFatTree));
 	sinkApps5.Stop(Seconds(stopTimeFatTree));
 
-	p2p.EnablePcap("server tracing 35", node_server.Get(35)->GetDevice(1),
-			true);
-	p2p.EnablePcap("server tracing 18", node_server.Get(18)->GetDevice(1),
-			true);
-	p2p.EnablePcap("server tracing 20", node_server.Get(20)->GetDevice(1),
-			true);
-	p2p.EnablePcap("server tracing 40", node_server.Get(40)->GetDevice(1),
-			true);
-	p2p.EnablePcap("server tracing 23", node_server.Get(23)->GetDevice(1),
-			true);
-	p2p.EnablePcap("server tracing 21", node_server.Get(21)->GetDevice(1),
-			true);
+//	p2p.EnablePcap("server tracing 35", node_server.Get(35)->GetDevice(1),
+//			true);
+//	p2p.EnablePcap("server tracing 18", node_server.Get(18)->GetDevice(1),
+//			true);
+//	p2p.EnablePcap("server tracing 20", node_server.Get(20)->GetDevice(1),
+//			true);
+//	p2p.EnablePcap("server tracing 40", node_server.Get(40)->GetDevice(1),
+//			true);
+//	p2p.EnablePcap("server tracing 23", node_server.Get(23)->GetDevice(1),
+//			true);
+//	p2p.EnablePcap("server tracing 21", node_server.Get(21)->GetDevice(1),
+//			true);
 	//----------------------------------Simulation result-----------------------------------------------//
 	Simulator::Stop(Seconds(stopTimeFatTree + 0.01));
 	Simulator::Run();

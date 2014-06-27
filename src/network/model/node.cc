@@ -186,21 +186,21 @@ PacketSumTag::PacketSumTag() :
 	delaySum = 1;
 	nPkt = 0;
 }
-PacketSumTag::PacketSumTag(uint32_t nPkt_ ,double delaySum_) {
+PacketSumTag::PacketSumTag(uint32_t nPkt_, double delaySum_) {
 	this->delaySum = delaySum_;
 	this->nPkt = nPkt_;
 }
 TypeId PacketSumTag::GetTypeId(void) {
 	static TypeId tid =
 			TypeId("ns3::PacketSumTag").SetParent<Tag>().AddConstructor<
-			PacketSumTag>();
+					PacketSumTag>();
 	return tid;
 }
 TypeId PacketSumTag::GetInstanceTypeId(void) const {
 	return GetTypeId();
 }
 uint32_t PacketSumTag::GetSerializedSize(void) const {
-	return sizeof(double) +sizeof(uint32_t);
+	return sizeof(double) + sizeof(uint32_t);
 }
 void PacketSumTag::Serialize(TagBuffer i) const {
 	i.WriteU32(nPkt);
@@ -211,7 +211,42 @@ void PacketSumTag::Deserialize(TagBuffer i) {
 	delaySum = i.ReadDouble();
 }
 void PacketSumTag::Print(std::ostream &os) const {
-	std::cout << "DelaySum and number of packet are: " << delaySum <<" , "<<nPkt<< std::endl;
+	std::cout << "DelaySum and number of packet are: " << delaySum << " , "
+			<< nPkt << std::endl;
+}
+
+IsBackTag::IsBackTag() :
+		Tag() {
+	isBack = 0;
+}
+IsBackTag::IsBackTag(uint32_t isBack_) {
+	this->isBack = isBack_;
+}
+TypeId IsBackTag::GetTypeId(void) {
+	static TypeId tid =
+			TypeId("ns3::IsBackTag").SetParent<Tag>().AddConstructor<IsBackTag>();
+	return tid;
+}
+TypeId IsBackTag::GetInstanceTypeId(void) const {
+	return GetTypeId();
+}
+uint32_t IsBackTag::GetSerializedSize(void) const {
+	return sizeof(uint32_t);
+}
+void IsBackTag::Serialize(TagBuffer i) const {
+	i.WriteU32(isBack);
+}
+void IsBackTag::Deserialize(TagBuffer i) {
+	isBack = i.ReadU32();
+}
+void IsBackTag::Print(std::ostream &os) const {
+	if (isBack == 1) {
+		std::cout << "This is a Backward packet " << std::endl;
+	} else if (isBack == 0) {
+		std::cout << "This is a normal Forward packet " << std::endl;
+	}else{
+		std::cout << "something error happen in IsBackTag " << std::endl;
+	}
 }
 /*----------------------------------------------------------------------------------------*/
 

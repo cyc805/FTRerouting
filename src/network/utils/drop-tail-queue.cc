@@ -72,6 +72,8 @@ DropTailQueue::DropTailQueue() :
 	inQueue_20 = 0;
 	inQueue_40 = 0;
 	inQueue_21 = 0;
+	dropFor_18_129 = 0;
+	dropFor_35_129 = 0;
 	/*--------------------------------------------------------------*/
 }
 
@@ -91,16 +93,22 @@ DropTailQueue::QueueMode DropTailQueue::GetMode(void) {
 void DropTailQueue::PrintDropCount(void) {
 //	std::cout << "called time: " << Simulator::Now().GetSeconds()
 //			<< " DropCount print called" << std::endl;
-	switch (selectedNode) {
-	case 167:
-		std::cout << "--------------Dropped----------------------" << std::endl;
+	if (selectedNode == 167 || selectedNode == 171) {
+		std::cout << "--------------Dropped-----1-----------------"
+				<< std::endl;
 		std::cout << "Dropped Packet for Flow 2 (18->5): " << dropFor_18
 				<< std::endl;
 		std::cout << "Dropped Packet for backGround Flow 2 (20->113): "
 				<< dropFor_20 << std::endl;
 		std::cout << "Dropped Packet for backGround2 Flow 2 (21->113): "
 				<< dropFor_21 << std::endl;
-		std::cout << "--------------In queued----------------------"
+		std::cout << "--------------Dropped-----2-----------------"
+				<< std::endl;
+		std::cout << "Dropped Packet for Flow 1 (35->5): " << dropFor_35
+				<< std::endl;
+		std::cout << "Dropped Packet for backGround Flow 1 (40->100): "
+				<< dropFor_40 << std::endl;
+		std::cout << "--------------In queued----1------------------"
 				<< std::endl;
 		std::cout << "In queued Packet for Flow 2 (18->5):  " << inQueue_18
 				<< std::endl;
@@ -108,22 +116,20 @@ void DropTailQueue::PrintDropCount(void) {
 				<< inQueue_20 << std::endl;
 		std::cout << "In queued Packet for backGround2 Flow 2 (21->113): "
 				<< inQueue_21 << std::endl;
-		break;
-	case 171:
-		std::cout << "--------------Dropped----------------------" << std::endl;
-		std::cout << "Dropped Packet for Flow 1 (35->5): " << dropFor_35
-				<< std::endl;
-		std::cout << "Dropped Packet for backGround Flow 1 (40->100): "
-				<< dropFor_40 << std::endl;
-		std::cout << "--------------In queued----------------------"
+		std::cout << "--------------In queued-----2-----------------"
 				<< std::endl;
 		std::cout << "In queued Packet for Flow 1 (35->5): " << inQueue_35
 				<< std::endl;
 		std::cout << "In queued Packet for backGround Flow 1 (40->100): "
 				<< inQueue_40 << std::endl;
-		break;
+	} else if (selectedNode == 129) {
+		std::cout << "--------------Dropped----------------------"
+				<< std::endl;
+		std::cout << "Dropped Packet for Flow 2 (18->5): " << dropFor_18_129
+				<< std::endl;
+		std::cout << "Dropped Packet for Flow 1 (35->5): "
+				<< dropFor_35_129 << std::endl;
 	}
-
 }
 bool DropTailQueue::DoEnqueue(Ptr<Packet> p) {
 	NS_LOG_FUNCTION (this << p);
@@ -144,36 +150,75 @@ bool DropTailQueue::DoEnqueue(Ptr<Packet> p) {
 		if (m_enableDropTrace == 1) {
 			SrcIdTag node_src;
 			p->PeekPacketTag(node_src);
+			IsBackTag isback;
+			p->PeekPacketTag(isback);
+			if (node_src == NodeId(1, 0, 2)) {
+				dropFor_18++;
+			} else if (node_src == NodeId(1, 1, 0)) {
+				dropFor_20++;
+			} else if (node_src == NodeId(1, 1, 1)) {
+				dropFor_21++;
+			} else if (node_src == NodeId(2, 0, 3)) {
+				dropFor_35++;
+			} else if (node_src == NodeId(2, 2, 0)) {
+				dropFor_40++;
+			}
 			switch (selectedNode) {
 			case 167:
 				if (node_src == NodeId(1, 0, 2)) {
-					std::cout << "Time:" << Simulator::Now().GetSeconds()
-							<< " Flow2:(18->5)" << " Drop" << " QueueSize:"
-							<< m_bytesInQueue << std::endl;
-					dropFor_18++;
+					if (isback.isBack == 1) {
+						std::cout << "Time:" << Simulator::Now().GetSeconds()
+								<< " Flow2:(18->5)Revise" << " Drop"
+								<< " QueueSize:" << m_bytesInQueue / 578
+								<< std::endl;
+					} else {
+						std::cout << "Time:" << Simulator::Now().GetSeconds()
+								<< " Flow2:(18->5)" << " Drop" << " QueueSize:"
+								<< m_bytesInQueue << std::endl;
+					}
+
 				} else if (node_src == NodeId(1, 1, 0)) {
 					std::cout << "Time:" << Simulator::Now().GetSeconds()
 							<< " BackgroundFlow2:(20->113)" << " Drop"
 							<< " QueueSize:" << m_bytesInQueue << std::endl;
-					dropFor_20++;
+
 				} else if (node_src == NodeId(1, 1, 1)) {
 					std::cout << "Time:" << Simulator::Now().GetSeconds()
 							<< " Background2Flow2:(21->113)" << " Drop"
 							<< " QueueSize:" << m_bytesInQueue << std::endl;
-					dropFor_21++;
+
 				}
 				break;
 			case 171:
 				if (node_src == NodeId(2, 0, 3)) {
-					std::cout << "Time:" << Simulator::Now().GetSeconds()
-							<< " Flow1:(35->5)" << " Drop" << " QueueSize:"
-							<< m_bytesInQueue << std::endl;
-					dropFor_35++;
+					if (isback.isBack == 1) {
+						std::cout << "Time:" << Simulator::Now().GetSeconds()
+								<< " Flow1:(35->5)Revise" << " Drop"
+								<< " QueueSize:" << m_bytesInQueue << std::endl;
+					} else {
+						std::cout << "Time:" << Simulator::Now().GetSeconds()
+								<< " Flow1:(35->5)" << " Drop" << " QueueSize:"
+								<< m_bytesInQueue << std::endl;
+					}
+
 				} else if (node_src == NodeId(2, 2, 0)) {
 					std::cout << "Time:" << Simulator::Now().GetSeconds()
 							<< " BackgroundFlow1:(40->100)" << " Drop"
 							<< " QueueSize:" << m_bytesInQueue << std::endl;
-					dropFor_40++;
+
+				}
+				break;
+			case 129:
+				if (node_src == NodeId(2, 0, 3)) {
+					std::cout << "Time:" << Simulator::Now().GetSeconds()
+							<< " Flow1:(35->5)" << " Drop" << " QueueSize:"
+							<< m_bytesInQueue << std::endl;
+					dropFor_35_129++;
+				} else {
+					std::cout << "Time:" << Simulator::Now().GetSeconds()
+							<< " Flow2:(18->5)" << " Drop" << " QueueSize:"
+							<< m_bytesInQueue << std::endl;
+					dropFor_18_129++;
 				}
 				break;
 			}
@@ -190,36 +235,74 @@ bool DropTailQueue::DoEnqueue(Ptr<Packet> p) {
 		if (m_enableDropTrace == 1) {
 			SrcIdTag node_src;
 			p->PeekPacketTag(node_src);
+			IsBackTag isback;
+			p->PeekPacketTag(isback);
+			if (node_src == NodeId(1, 0, 2)) {
+				dropFor_18++;
+			} else if (node_src == NodeId(1, 1, 0)) {
+				dropFor_20++;
+			} else if (node_src == NodeId(1, 1, 1)) {
+				dropFor_21++;
+			} else if (node_src == NodeId(2, 0, 3)) {
+				dropFor_35++;
+			} else if (node_src == NodeId(2, 2, 0)) {
+				dropFor_40++;
+			}
 			switch (selectedNode) {
 			case 167:
 				if (node_src == NodeId(1, 0, 2)) {
-					std::cout << "Time:" << Simulator::Now().GetSeconds()
-							<< " Flow2:(18->5)" << " Drop" << " QueueSize:"
-							<< m_bytesInQueue << std::endl;
-					dropFor_18++;
+					if (isback.isBack == 1) {
+						std::cout << "Time:" << Simulator::Now().GetSeconds()
+								<< " Flow2:(18->5)Revise" << " Drop"
+								<< " QueueSize:" << m_bytesInQueue << std::endl;
+					} else {
+						std::cout << "Time:" << Simulator::Now().GetSeconds()
+								<< " Flow2:(18->5)" << " Drop" << " QueueSize:"
+								<< m_bytesInQueue << std::endl;
+					}
+
 				} else if (node_src == NodeId(1, 1, 0)) {
 					std::cout << "Time:" << Simulator::Now().GetSeconds()
 							<< " BackgroundFlow2:(20->113)" << " Drop"
 							<< " QueueSize:" << m_bytesInQueue << std::endl;
-					dropFor_20++;
+
 				} else if (node_src == NodeId(1, 1, 1)) {
 					std::cout << "Time:" << Simulator::Now().GetSeconds()
 							<< " Background2Flow2:(21->113)" << " Drop"
 							<< " QueueSize:" << m_bytesInQueue << std::endl;
-					dropFor_21++;
+
 				}
 				break;
 			case 171:
 				if (node_src == NodeId(2, 0, 3)) {
-					std::cout << "Time:" << Simulator::Now().GetSeconds()
-							<< " Flow1:(35->5)" << " Drop" << " QueueSize:"
-							<< m_bytesInQueue << std::endl;
-					dropFor_35++;
+					if (isback.isBack == 1) {
+						std::cout << "Time:" << Simulator::Now().GetSeconds()
+								<< " Flow1:(35->5)Revise" << " Drop"
+								<< " QueueSize:" << m_bytesInQueue << std::endl;
+					} else {
+						std::cout << "Time:" << Simulator::Now().GetSeconds()
+								<< " Flow1:(35->5)" << " Drop" << " QueueSize:"
+								<< m_bytesInQueue << std::endl;
+					}
+
 				} else if (node_src == NodeId(2, 2, 0)) {
 					std::cout << "Time:" << Simulator::Now().GetSeconds()
 							<< " BackgroundFlow1:(40->100)" << " Drop"
 							<< " QueueSize:" << m_bytesInQueue << std::endl;
-					dropFor_40++;
+
+				}
+				break;
+			case 129:
+				if (node_src == NodeId(2, 0, 3)) {
+					std::cout << "Time:" << Simulator::Now().GetSeconds()
+							<< " Flow1:(35->5)" << " Drop" << " QueueSize:"
+							<< m_bytesInQueue << std::endl;
+					dropFor_35_129++;
+				} else {
+					std::cout << "Time:" << Simulator::Now().GetSeconds()
+							<< " Flow2:(18->5)" << " Drop" << " QueueSize:"
+							<< m_bytesInQueue << std::endl;
+					dropFor_18_129++;
 				}
 				break;
 			}
@@ -234,36 +317,72 @@ bool DropTailQueue::DoEnqueue(Ptr<Packet> p) {
 	if (m_enableDropTrace == 1) {
 		SrcIdTag node_src;
 		p->PeekPacketTag(node_src);
+		IsBackTag isback;
+		p->PeekPacketTag(isback);
+		if (node_src == NodeId(1, 0, 2)) {
+			inQueue_18++;
+		} else if (node_src == NodeId(1, 1, 0)) {
+			inQueue_20++;
+		} else if (node_src == NodeId(1, 1, 1)) {
+			inQueue_21++;
+		} else if (node_src == NodeId(2, 0, 3)) {
+			inQueue_35++;
+		} else if (node_src == NodeId(2, 2, 0)) {
+			inQueue_40++;
+		}
 		switch (selectedNode) {
 		case 167:
 			if (node_src == NodeId(1, 0, 2)) {
-				std::cout << "Time:" << Simulator::Now().GetSeconds()
-						<< " Flow2:(18->5)" << " Enqueue" << " QueueSize:"
-						<< m_bytesInQueue << std::endl;
-				inQueue_18++;
+				if (isback.isBack == 1) {
+					std::cout << "Time:" << Simulator::Now().GetSeconds()
+							<< " Flow2:(18->5)Revise" << " Enqueue"
+							<< " QueueSize:" << m_bytesInQueue << std::endl;
+				} else {
+					std::cout << "Time:" << Simulator::Now().GetSeconds()
+							<< " Flow2:(18->5)" << " Enqueue" << " QueueSize:"
+							<< m_bytesInQueue << std::endl;
+				}
+
 			} else if (node_src == NodeId(1, 1, 0)) {
 				std::cout << "Time:" << Simulator::Now().GetSeconds()
 						<< " BackgroundFlow2:(20->113)" << " Enqueue"
 						<< " QueueSize:" << m_bytesInQueue << std::endl;
-				inQueue_20++;
+
 			} else if (node_src == NodeId(1, 1, 1)) {
 				std::cout << "Time:" << Simulator::Now().GetSeconds()
 						<< " Background2Flow2:(21->113)" << " Enqueue"
 						<< " QueueSize:" << m_bytesInQueue << std::endl;
-				inQueue_21++;
+
 			}
 			break;
 		case 171:
 			if (node_src == NodeId(2, 0, 3)) {
-				std::cout << "Time:" << Simulator::Now().GetSeconds()
-						<< " Flow1:(35->5)" << " Enqueue" << " QueueSize:"
-						<< m_bytesInQueue << std::endl;
-				inQueue_35++;
+				if (isback.isBack == 1) {
+					std::cout << "Time:" << Simulator::Now().GetSeconds()
+							<< " Flow1:(35->5)Revise" << " Enqueue"
+							<< " QueueSize:" << m_bytesInQueue << std::endl;
+				} else {
+					std::cout << "Time:" << Simulator::Now().GetSeconds()
+							<< " Flow1:(35->5)" << " Enqueue" << " QueueSize:"
+							<< m_bytesInQueue << std::endl;
+				}
+
 			} else if (node_src == NodeId(2, 2, 0)) {
 				std::cout << "Time:" << Simulator::Now().GetSeconds()
 						<< " BackgroundFlow1:(40->100)" << " Enqueue"
 						<< " QueueSize:" << m_bytesInQueue << std::endl;
-				inQueue_40++;
+
+			}
+			break;
+		case 129:
+			if (node_src == NodeId(2, 0, 3)) {
+				std::cout << "Time:" << Simulator::Now().GetSeconds()
+						<< " Flow1:(35->5)" << " Enqueue" << " QueueSize:"
+						<< m_bytesInQueue << std::endl;
+			} else {
+				std::cout << "Time:" << Simulator::Now().GetSeconds()
+						<< " Flow2:(18->5)" << " Enqueue" << " QueueSize:"
+						<< m_bytesInQueue << std::endl;
 			}
 			break;
 		}
@@ -285,6 +404,52 @@ Ptr<Packet> DropTailQueue::DoDequeue(void) {
 	Ptr<Packet> p = m_packets.front();
 	m_packets.pop();
 	m_bytesInQueue -= p->GetSize();
+
+	/*-------------By Zhiyong----------------------------*/
+	if (m_enableDropTrace == 1) {
+		SrcIdTag node_src;
+		p->PeekPacketTag(node_src);
+		switch (selectedNode) {
+		case 167:
+			if (node_src == NodeId(1, 0, 2)) {
+				std::cout << "Time:" << Simulator::Now().GetSeconds()
+						<< " Flow2:(18->5)" << " Dequeue" << " QueueSize:"
+						<< m_bytesInQueue << std::endl;
+			} else if (node_src == NodeId(1, 1, 0)) {
+				std::cout << "Time:" << Simulator::Now().GetSeconds()
+						<< " BackgroundFlow2:(20->113)" << " Dequeue"
+						<< " QueueSize:" << m_bytesInQueue << std::endl;
+			} else if (node_src == NodeId(1, 1, 1)) {
+				std::cout << "Time:" << Simulator::Now().GetSeconds()
+						<< " Background2Flow2:(21->113)" << " Dequeue"
+						<< " QueueSize:" << m_bytesInQueue << std::endl;
+			}
+			break;
+		case 171:
+			if (node_src == NodeId(2, 0, 3)) {
+				std::cout << "Time:" << Simulator::Now().GetSeconds()
+						<< " Flow1:(35->5)" << " Dequeue" << " QueueSize:"
+						<< m_bytesInQueue << std::endl;
+			} else if (node_src == NodeId(2, 2, 0)) {
+				std::cout << "Time:" << Simulator::Now().GetSeconds()
+						<< " BackgroundFlow1:(40->100)" << " Dequeue"
+						<< " QueueSize:" << m_bytesInQueue << std::endl;
+			}
+			break;
+		case 129:
+			if (node_src == NodeId(2, 0, 3)) {
+				std::cout << "Time:" << Simulator::Now().GetSeconds()
+						<< " Flow1:(35->5)" << " Dequeue" << " QueueSize:"
+						<< m_bytesInQueue << std::endl;
+			} else {
+				std::cout << "Time:" << Simulator::Now().GetSeconds()
+						<< " Flow2:(18->5)" << " Dequeue" << " QueueSize:"
+						<< m_bytesInQueue << std::endl;
+			}
+			break;
+		}
+	}
+	/*--------------------------------------------------*/
 
 	NS_LOG_LOGIC ("Popped " << p);
 

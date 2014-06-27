@@ -65,7 +65,7 @@ public:
 	bool IsNotFailure_FatTree(NodeId nodeId, uint32_t normalOif);
 
 	uint32_t Forwarding_FatTree(Ptr<Packet> packet, uint32_t iif);
-
+	uint32_t reRoutTemp;//by Zhiyong
 	/**
 	 * Construct a PointToPointNetDevice
 	 *

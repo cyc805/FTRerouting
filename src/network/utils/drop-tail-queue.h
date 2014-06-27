@@ -61,6 +61,8 @@ public:
   void PrintDropCount(void);
   uint32_t dropFor_18;
   uint32_t dropFor_35;
+  uint32_t dropFor_18_129;
+  uint32_t dropFor_35_129;
   uint32_t dropFor_20;
   uint32_t dropFor_40;
   uint32_t dropFor_21;

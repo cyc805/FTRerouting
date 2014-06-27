@@ -660,6 +660,8 @@ void Ipv4L3Protocol::SendRealOut(Ptr<Ipv4Route> route, Ptr<Packet> packet,
 		NodeId nodeId_turning;
 		double time = Simulator::Now().GetSeconds();
 		TimeStampTag timeTag = TimeStampTag(time);
+		IsBackTag isBacktag = IsBackTag(0);
+		packet->AddPacketTag(isBacktag);
 //		std::cout << "src node=";
 //		nodeId_src.Print(std::cout);
 //		std::cout << "dst node=";
