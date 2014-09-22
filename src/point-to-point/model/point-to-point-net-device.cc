@@ -555,8 +555,7 @@ bool PointToPointNetDevice::IsForwarding_FatTree(NodeId nodeId, IdTag dstId,
 	if (nodeId.id_level == 0) {
 		if ((nodeId.id_level == 0) && ((iif - 1) == dstId.id_pod)) { // iif starts from 1, but podId start from 0.
 			return false;
-		}
-		else
+		} else
 			return true;
 	} else if ((iif > Port_num / 2) && (nodeId.id_pod != dstId.id_pod)) {
 		return false;
@@ -631,15 +630,27 @@ uint32_t PointToPointNetDevice::Forwarding_FatTree(Ptr<Packet> packet,
 		case 1:
 
 			if (nodeId.id_pod == dstId.id_pod) { // failure happen in the downstream, then go back to the source.
-				oif = NormalForwarding_FatTree(nodeId, srcId, dstId, turningId);
+				oif = NormalForwarding_FatTree(nodeId, srcId, dstId, turningId); // backtracking
 				return oif;
 			}
 			if ((nodeId.id_pod == srcId.id_pod) && (iif > Port_num / 2)) { // find the ReRouting output port. (failure happens in the destination pod)
-				oif = iif;
-				if (oif != Port_num / 2 + 1)
-					oif = Port_num / 2 + 1;
-				else
-					oif = Port_num;
+
+				if (false) { // For efficient fat-tree, the V-turn switch is a level-1 switch.
+					oif = iif;
+					if (oif != Port_num / 2 + 1) {
+						oif = Port_num / 2 + 1;
+					} else {
+						oif = Port_num;
+					}
+
+				}
+				// For regular fat-tree, keep backtracking the packet from this level-1 switch
+				// to the level-2 switch (the V-turn switch).
+				else {
+					oif = NormalForwarding_FatTree(nodeId, srcId, dstId,
+							turningId); // backtracking
+					return oif;
+				}
 			} else if ((nodeId.id_pod == srcId.id_pod)
 					&& (iif <= Port_num / 2)) { // find the ReRouting output port(failure happens in the source pod)
 				oif = NormalForwarding_FatTree(nodeId, dstId, srcId, turningId);
@@ -648,9 +659,12 @@ uint32_t PointToPointNetDevice::Forwarding_FatTree(Ptr<Packet> packet,
 				else
 					oif--;
 			}
+
+			// Record the reroute path for routing subsequent packets.
 			if (srcId.id_pod == nodeId.id_pod) {
 				(*reRoutingMap)[reRoutingKey] = oif;
-				std::cout << "add to rerouting map in level 1 switch = " << std::endl;
+				std::cout << "add to rerouting map in level 1 switch = "
+						<< std::endl;
 				for (std::map<std::string, uint32_t>::const_iterator it =
 						reRoutingMap->begin(); it != reRoutingMap->end();
 						++it) {
@@ -661,11 +675,11 @@ uint32_t PointToPointNetDevice::Forwarding_FatTree(Ptr<Packet> packet,
 			break;
 		case 2:
 			oif = NormalForwarding_FatTree(nodeId, dstId, srcId, turningId);
-			reRoutTemp ++;
-			if(reRoutTemp == (Port_num/2 -1)){
+			reRoutTemp++;
+			if (reRoutTemp == (Port_num / 2 - 1)) {
 				reRoutTemp++;
 			}
-			oif = (oif + reRoutTemp)%(Port_num/2) + Port_num/2 +1;
+			oif = (oif + reRoutTemp) % (Port_num / 2) + Port_num / 2 + 1;
 			//std::cout<<"herherhehrehrhehrherhehrhehrhehrherhehrhehrhehrh"<<"   oif = " <<oif<<std::endl;
 //			if (oif >= Port_num)
 //				oif++;
@@ -673,7 +687,8 @@ uint32_t PointToPointNetDevice::Forwarding_FatTree(Ptr<Packet> packet,
 //				oif--;
 			//std::cout<<"after retouing oif = " <<oif <<std::endl;
 			(*reRoutingMap)[reRoutingKey] = oif;
-			std::cout << "add to rerouting map in level 2 switch = " << std::endl;
+			std::cout << "add to rerouting map in level 2 switch = "
+					<< std::endl;
 ////			std::cout << "add to rerouting map = " << std::endl;
 			for (std::map<std::string, uint32_t>::const_iterator it =
 					reRoutingMap->begin(); it != reRoutingMap->end(); ++it) {

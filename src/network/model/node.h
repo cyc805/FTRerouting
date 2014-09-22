@@ -51,6 +51,11 @@ public:
 	NodeId(uint32_t id_pod, uint32_t id_switch, uint32_t id_level);
 	void Print(std::ostream &os);
 	bool operator ==(const NodeId) const;
+
+	/**
+	 * return format: "xxx", e.g. "000", "112"
+	 */
+	std::string toString();
 };
 
 class IdTag: public Tag, public NodeId {
@@ -90,7 +95,7 @@ public:
 };
 /*--------------------------------------------------------------------------------------------*/
 /*--------------------------------------------------By Zhiyong--------------------------------*/
-class TimeStampTag: public Tag{
+class TimeStampTag: public Tag {
 public:
 	static TypeId GetTypeId(void);
 	virtual TypeId GetInstanceTypeId(void) const;
@@ -102,7 +107,7 @@ public:
 	TimeStampTag(double time_);
 	double time;
 };
-class PacketSumTag: public Tag{
+class PacketSumTag: public Tag {
 public:
 	static TypeId GetTypeId(void);
 	virtual TypeId GetInstanceTypeId(void) const;
@@ -115,7 +120,7 @@ public:
 	double delaySum;
 	uint32_t nPkt;
 };
-class IsBackTag: public Tag{ // this tag is used when this is a backwad packet
+class IsBackTag: public Tag { // this tag is used when this is a backwad packet
 public:
 	static TypeId GetTypeId(void);
 	virtual TypeId GetInstanceTypeId(void) const;

@@ -42,6 +42,8 @@
 
 NS_LOG_COMPONENT_DEFINE("Ipv4L3Protocol");
 
+std::vector<std::pair<std::string, std::string> > server_turning_pairs;
+
 namespace ns3 {
 
 const uint16_t Ipv4L3Protocol::PROT_NUMBER = 0x0800;
@@ -674,89 +676,124 @@ void Ipv4L3Protocol::SendRealOut(Ptr<Ipv4Route> route, Ptr<Packet> packet,
 		packet->AddPacketTag(
 				SrcIdTag(nodeId_src.id_pod, nodeId_src.id_switch,
 						nodeId_src.id_level));
-		bool isTarget1 = (nodeId_dst == NodeId(0, 1, 1)); //Set the turning SWID to be 000, if the packet is sent from 011 or send to 011.
-//				&& (nodeId_src == NodeId(2, 0, 0));
-		bool isTarget2 = (nodeId_src == NodeId(0, 1, 1));
-//				&& (nodeId_src == NodeId(0, 1, 1));
-		bool isTarget = isTarget1 || isTarget2;
-		if (isTarget) {
-			nodeId_turning.id_pod = 0;    //TODO
-			nodeId_turning.id_switch = 0;    //TODO
-			if (nodeId_dst.id_pod != nodeId_src.id_pod) {
-				nodeId_turning.id_level = 0;
-			} else if (nodeId_dst.id_switch != nodeId_src.id_switch) {
-				nodeId_turning.id_level = 1;
-			} else {
-				nodeId_turning.id_level = 2;
+
+		std::string turning_switch_label = "xxx"; // default init value;
+
+		// Find turning switch for the given nodeId_src/nodeId_dst
+		for (uint i = 0; i < server_turning_pairs.size(); i++) {
+			std::string server_label = server_turning_pairs[i].first;
+
+			// Set the turning SWID, if the packet is from OR to the "server_label".
+			// i.e. the data flow and ACK flow use the same turning switch.
+			if (server_label == nodeId_src.toString()
+					|| server_label == nodeId_dst.toString()) {
+				turning_switch_label = server_turning_pairs[i].second;
+				break;
 			}
 		}
-//		if (nodeId_src == NodeId(2, 0, 3) || nodeId_dst == NodeId(2, 0, 3)) {// if Src or Dst is 203,nodeIndex(35), we set turningSWID 320;
-//			nodeId_turning.id_pod = 3;    //TODO
-//			nodeId_turning.id_switch = 2;    //TODO
-//			if (nodeId_dst.id_pod != nodeId_src.id_pod) {
-//				nodeId_turning.id_level = 0;
-//			} else if (nodeId_dst.id_switch != nodeId_src.id_switch) {
-//				nodeId_turning.id_level = 1;
-//			} else {
-//				nodeId_turning.id_level = 2;
-//			}
-//		} else if (nodeId_src == NodeId(1, 0, 2) // if Src or Dst is 110,nodeIndex(18), we set turningSWID 310;
-//		|| (nodeId_dst == NodeId(1, 0, 2))) {
-//			nodeId_turning.id_pod = 3;    //TODO
-//			nodeId_turning.id_switch = 1;    //TODO
-//			if (nodeId_dst.id_pod != nodeId_src.id_pod) {
-//				nodeId_turning.id_level = 0;
-//			} else if (nodeId_dst.id_switch != nodeId_src.id_switch) {
-//				nodeId_turning.id_level = 1;
-//			} else {
-//				nodeId_turning.id_level = 2;
-//			}
-//		}
 
-		else if (nodeId_src == NodeId(1, 1, 0) // if Src or Dst is 110,nodeIndex(20), we set turningSWID 310;
-		|| (nodeId_dst == NodeId(1, 1, 0))) {
-			nodeId_turning.id_pod = 3;    //TODO
-			nodeId_turning.id_switch = 1;    //TODO
-			if (nodeId_dst.id_pod != nodeId_src.id_pod) {
-				nodeId_turning.id_level = 0;
-			} else if (nodeId_dst.id_switch != nodeId_src.id_switch) {
-				nodeId_turning.id_level = 1;
-			} else {
-				nodeId_turning.id_level = 2;
-			}
-		} else if (nodeId_src == NodeId(1, 1, 1) // if Src or Dst is 111,nodeIndex(21), we set turningSWID 310;
-		|| (nodeId_dst == NodeId(1, 1, 1))) {
-			nodeId_turning.id_pod = 3;    //TODO
-			nodeId_turning.id_switch = 1;    //TODO
-			if (nodeId_dst.id_pod != nodeId_src.id_pod) {
-				nodeId_turning.id_level = 0;
-			} else if (nodeId_dst.id_switch != nodeId_src.id_switch) {
-				nodeId_turning.id_level = 1;
-			} else {
-				nodeId_turning.id_level = 2;
-			}
-		} else if (nodeId_src == NodeId(2, 2, 0) // if Src or Dst is 220,nodeIndex(40), we set turningSWID 320;
-		|| (nodeId_dst == NodeId(2, 2, 0))) {
-			nodeId_turning.id_pod = 3;    //TODO
-			nodeId_turning.id_switch = 2;    //TODO
-			if (nodeId_dst.id_pod != nodeId_src.id_pod) {
-				nodeId_turning.id_level = 0;
-			} else if (nodeId_dst.id_switch != nodeId_src.id_switch) {
-				nodeId_turning.id_level = 1;
-			} else {
-				nodeId_turning.id_level = 2;
-			}
-		} else {
+		if (turning_switch_label == "xxx") { // not found in the pairs, set default turning switch to "21x"
 			nodeId_turning.id_pod = 2;    //TODO
 			nodeId_turning.id_switch = 1;    //TODO
-			if (nodeId_dst.id_pod != nodeId_src.id_pod) {
-				nodeId_turning.id_level = 0;
-			} else if (nodeId_dst.id_switch != nodeId_src.id_switch) {
-				nodeId_turning.id_level = 1;
-			} else {
-				nodeId_turning.id_level = 2;
-			}
+		} else { // found in the server_turning_pairs.
+			uint i_pod = atoi(turning_switch_label.substr(0, 1).c_str());
+			uint i_switch = atoi(turning_switch_label.substr(1, 2).c_str());
+			nodeId_turning.id_pod = i_pod;    //TODO
+			nodeId_turning.id_switch = i_switch;    //TODO
 		}
+
+		// set level of turning switch
+		if (nodeId_dst.id_pod != nodeId_src.id_pod) {
+			nodeId_turning.id_level = 0;
+		} else if (nodeId_dst.id_switch != nodeId_src.id_switch) {
+			nodeId_turning.id_level = 1;
+		} else {
+			nodeId_turning.id_level = 2;
+		}
+
+		/*bool isTarget1 = (nodeId_dst == NodeId(0, 1, 1)); //Set the turning SWID to be 000, if the packet is sent from 011 or send to 011.
+		 //				&& (nodeId_src == NodeId(2, 0, 0));
+		 bool isTarget2 = (nodeId_src == NodeId(0, 1, 1));
+		 //				&& (nodeId_src == NodeId(0, 1, 1));
+		 bool isTarget = isTarget1 || isTarget2;
+		 if (isTarget) {
+		 nodeId_turning.id_pod = 0;    //TODO
+		 nodeId_turning.id_switch = 0;    //TODO
+		 if (nodeId_dst.id_pod != nodeId_src.id_pod) {
+		 nodeId_turning.id_level = 0;
+		 } else if (nodeId_dst.id_switch != nodeId_src.id_switch) {
+		 nodeId_turning.id_level = 1;
+		 } else {
+		 nodeId_turning.id_level = 2;
+		 }
+		 }
+		 //		if (nodeId_src == NodeId(2, 0, 3) || nodeId_dst == NodeId(2, 0, 3)) {// if Src or Dst is 203,nodeIndex(35), we set turningSWID 320;
+		 //			nodeId_turning.id_pod = 3;    //TODO
+		 //			nodeId_turning.id_switch = 2;    //TODO
+		 //			if (nodeId_dst.id_pod != nodeId_src.id_pod) {
+		 //				nodeId_turning.id_level = 0;
+		 //			} else if (nodeId_dst.id_switch != nodeId_src.id_switch) {
+		 //				nodeId_turning.id_level = 1;
+		 //			} else {
+		 //				nodeId_turning.id_level = 2;
+		 //			}
+		 //		} else if (nodeId_src == NodeId(1, 0, 2) // if Src or Dst is 110,nodeIndex(18), we set turningSWID 310;
+		 //		|| (nodeId_dst == NodeId(1, 0, 2))) {
+		 //			nodeId_turning.id_pod = 3;    //TODO
+		 //			nodeId_turning.id_switch = 1;    //TODO
+		 //			if (nodeId_dst.id_pod != nodeId_src.id_pod) {
+		 //				nodeId_turning.id_level = 0;
+		 //			} else if (nodeId_dst.id_switch != nodeId_src.id_switch) {
+		 //				nodeId_turning.id_level = 1;
+		 //			} else {
+		 //				nodeId_turning.id_level = 2;
+		 //			}
+		 //		}
+
+		 else if (nodeId_src == NodeId(1, 1, 0) // if Src or Dst is 110,nodeIndex(20), we set turningSWID 310;
+		 || (nodeId_dst == NodeId(1, 1, 0))) {
+		 nodeId_turning.id_pod = 3;    //TODO
+		 nodeId_turning.id_switch = 1;    //TODO
+		 if (nodeId_dst.id_pod != nodeId_src.id_pod) {
+		 nodeId_turning.id_level = 0;
+		 } else if (nodeId_dst.id_switch != nodeId_src.id_switch) {
+		 nodeId_turning.id_level = 1;
+		 } else {
+		 nodeId_turning.id_level = 2;
+		 }
+		 } else if (nodeId_src == NodeId(1, 1, 1) // if Src or Dst is 111,nodeIndex(21), we set turningSWID 310;
+		 || (nodeId_dst == NodeId(1, 1, 1))) {
+		 nodeId_turning.id_pod = 3;    //TODO
+		 nodeId_turning.id_switch = 1;    //TODO
+		 if (nodeId_dst.id_pod != nodeId_src.id_pod) {
+		 nodeId_turning.id_level = 0;
+		 } else if (nodeId_dst.id_switch != nodeId_src.id_switch) {
+		 nodeId_turning.id_level = 1;
+		 } else {
+		 nodeId_turning.id_level = 2;
+		 }
+		 } else if (nodeId_src == NodeId(2, 2, 0) // if Src or Dst is 220,nodeIndex(40), we set turningSWID 320;
+		 || (nodeId_dst == NodeId(2, 2, 0))) {
+		 nodeId_turning.id_pod = 3;    //TODO
+		 nodeId_turning.id_switch = 2;    //TODO
+		 if (nodeId_dst.id_pod != nodeId_src.id_pod) {
+		 nodeId_turning.id_level = 0;
+		 } else if (nodeId_dst.id_switch != nodeId_src.id_switch) {
+		 nodeId_turning.id_level = 1;
+		 } else {
+		 nodeId_turning.id_level = 2;
+		 }
+		 } else {
+		 nodeId_turning.id_pod = 2;    //TODO
+		 nodeId_turning.id_switch = 1;    //TODO
+		 if (nodeId_dst.id_pod != nodeId_src.id_pod) {
+		 nodeId_turning.id_level = 0;
+		 } else if (nodeId_dst.id_switch != nodeId_src.id_switch) {
+		 nodeId_turning.id_level = 1;
+		 } else {
+		 nodeId_turning.id_level = 2;
+		 }
+		 }*/
 		packet->AddPacketTag(
 				TurningIdTag(nodeId_turning.id_pod, nodeId_turning.id_switch,
 						nodeId_turning.id_level));

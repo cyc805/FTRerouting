@@ -40,6 +40,16 @@ namespace ns3 {
 NS_OBJECT_ENSURE_REGISTERED(Node);
 
 /*--------------------------------------------Chunzhi-----------------------------------*/
+
+// add by Chunzhi
+std::string i2s(uint i) {
+	std::string s;
+	std::stringstream out;
+	out << i;
+	s = out.str();
+	return s;
+}
+
 NodeId::NodeId() {
 	id_pod = 0xffffffff;
 	id_switch = 0xffffffff;
@@ -60,6 +70,10 @@ bool NodeId::operator ==(const NodeId other) const {
 void NodeId::Print(std::ostream &os) {
 	os << "node tag id = " << id_pod << "," << id_switch << "," << id_level
 			<< std::endl;
+}
+
+std::string NodeId::toString() {
+	return i2s(id_pod) + i2s(id_switch) + i2s(id_level);
 }
 
 IdTag::IdTag() :
@@ -244,7 +258,7 @@ void IsBackTag::Print(std::ostream &os) const {
 		std::cout << "This is a Backward packet " << std::endl;
 	} else if (isBack == 0) {
 		std::cout << "This is a normal Forward packet " << std::endl;
-	}else{
+	} else {
 		std::cout << "something error happen in IsBackTag " << std::endl;
 	}
 }

@@ -35,6 +35,8 @@
 #include "ns3/nstime.h"
 #include "ns3/simulator.h"
 
+extern std::vector<std::pair<std::string, std::string> > server_turning_pairs;
+
 namespace ns3 {
 
 class Packet;

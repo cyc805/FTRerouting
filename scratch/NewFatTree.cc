@@ -32,6 +32,13 @@ using namespace std;
 
 std::map<Ptr<Node>, Ipv4Address> ServerIpMap;
 std::map<Ipv4Address, Ptr<Node> > IpServerMap;
+
+std::map<std::string, uint> serverLabel_id_map;
+std::map<std::string, Ipv4Address> serverLabel_address_map;
+
+//std::map<std::string, std::string> server_turning_map; // serverLabel-> turningSwitchLabel
+std::vector<std::pair<std::string, std::string> > server_turning_pairs; // serverLabel-> turningSwitchLabel
+
 std::map<std::string, uint32_t> FailNode_oif_map;
 extern double startTimeFatTree;
 extern double stopTimeFatTree;
@@ -68,8 +75,8 @@ std::string i2s(uint i) {
 int main(int argc, char *argv[]) {
 	/*-------------------parameter setting----------------------*/
 	startTimeFatTree = 0.0;
-	stopTimeFatTree = 100.0;
-	collectTime = 10.0;
+	stopTimeFatTree = 10.0;
+	collectTime = 5.0;
 	selectedNode = 129; //Id 167 is the aggregate switch for flow(18->5) and flow(20->113)
 						//Id 171 is the aggregate switch for flow(35->5) and flow(40->100)
 						//Id 129 is the edge switch for flow(18->5) and flow(35->5)
@@ -138,13 +145,11 @@ int main(int argc, char *argv[]) {
 //	// First create four set of Level-0 subnets
 	uint32_t ip1;
 
-	for (int i = 0; i < Port_num; i++)      // cycling with pods
-			{
-		for (int j = 0; j < Port_num / 2; j++) // cycling within every pod among Level 2 switches
-				{
-			node_l2switch.Get(i * (Port_num / 2) + j)->SetId_FatTree(i, j, 2); // labling the switch
-			for (int k = 0; k < Port_num / 2; k++) // cycling within every level 2 switch
-					{
+	for (int i = 0; i < Port_num; i++) {     // cycling with pods
+		for (int j = 0; j < Port_num / 2; j++) { // cycling within every pod among Level 2 switches
+			node_l2switch.Get(i * (Port_num / 2) + j)->SetId_FatTree(i, j, 2); // labeling the switch
+			for (int k = 0; k < Port_num / 2; k++) { // cycling within every level 2 switch
+
 				NetDeviceContainer link;
 				NodeContainer node;
 				Ptr<Node> serverNode = node_server.Get(
@@ -154,7 +159,11 @@ int main(int argc, char *argv[]) {
 //						i * (Port_num * Port_num / 4) + j * (Port_num / 2) + k)->SetId_FatTree(
 //						i, j, k); // labling the host server
 
-				serverNode->nodeId_FatTree = NodeId(i, j, k); // labling the host server
+				serverNode->nodeId_FatTree = NodeId(i, j, k); // labeling the host server
+
+				std::string serverTag = i2s(i) + i2s(j) + i2s(k);
+				serverLabel_id_map[serverTag] = serverNode->GetId();
+
 				node.Add(node_l2switch.Get(i * (Port_num / 2) + j));
 				link = p2p.Install(node);
 				// assign the ip address of the two device.
@@ -165,17 +174,15 @@ int main(int argc, char *argv[]) {
 
 				ServerIpMap[serverNode] = server_ip.GetAddress(0);
 				IpServerMap[server_ip.GetAddress(0)] = serverNode;
+				serverLabel_address_map[serverTag] = server_ip.GetAddress(0);
 			}
 
 		}
 	} // End of creating servers at level-0 and connecting it to first layer switch
 	  // Now connect first layer switch with second layer
-	for (int i = 0; i < Port_num; i++)  //cycling among pods
-			{
-		for (int j = 0; j < Port_num / 2; j++)  //cycling among switches
-				{
-			for (int k = 0; k < Port_num / 2; k++) //cycling among ports on one switch
-					{
+	for (int i = 0; i < Port_num; i++) { //cycling among pods
+		for (int j = 0; j < Port_num / 2; j++) {  //cycling among switches
+			for (int k = 0; k < Port_num / 2; k++) { //cycling among ports on one switch
 				NetDeviceContainer link;
 				NodeContainer node;
 				node.Add(node_l2switch.Get(i * (Port_num / 2) + j));
@@ -191,23 +198,31 @@ int main(int argc, char *argv[]) {
 	}  //end of the connections construct between l2 switches and l1 switches
 	   // Now connect the core switches and the l2 switches
 
+	   // Efficient fat-tree (k=8) construction (shuffle pattern between core and aggregation layers)
+	/*int Pod[Port_num][Port_num * Port_num / 4] = { { 1, 2, 3, 4, 5, 6, 7, 8, 9,
+	 10, 11, 12, 13, 14, 15, 16 }, { 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+	 13, 14, 15, 16, 1 }, { 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+	 16, 1, 2 },
+	 { 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 1, 2, 3 }, { 1, 5,
+	 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16 }, { 5, 9,
+	 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16, 1 }, { 9, 13,
+	 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16, 1, 5 }, { 13, 2,
+	 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16, 1, 5, 9 } };*/
+
+	// Regular fat-tree (k=8) construction (shuffle pattern between core and aggregation layers)
 	int Pod[Port_num][Port_num * Port_num / 4] = { { 1, 2, 3, 4, 5, 6, 7, 8, 9,
-			10, 11, 12, 13, 14, 15, 16 }, { 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
-			13, 14, 15, 16, 1 }, { 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-			16, 1, 2 },
-			{ 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 1, 2, 3 }, { 1, 5,
-					9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16 }, { 5, 9,
-					13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16, 1 }, { 9, 13,
-					2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16, 1, 5 }, { 13, 2,
-					6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16, 1, 5, 9 } };
+			10, 11, 12, 13, 14, 15, 16 }, { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+			12, 13, 14, 15, 16 }, { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+			14, 15, 16 }, { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+			16 }, { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }, {
+			1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }, { 1, 2, 3,
+			4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }, { 1, 2, 3, 4, 5, 6,
+			7, 8, 9, 10, 11, 12, 13, 14, 15, 16 } };
 
 	int temp = 0;
-	for (int i = 0; i < Port_num; i++)	//cycling among the pods
-			{
-		for (int j = 0; j < Port_num / 2; j++)	//cycling among the pod switches
-				{
-			for (int k = 0; k < Port_num / 2; k++)//cycling among the ports on each switch
-					{
+	for (int i = 0; i < Port_num; i++) {	//cycling among the pods
+		for (int j = 0; j < Port_num / 2; j++) {//cycling among the pod switches
+			for (int k = 0; k < Port_num / 2; k++) {//cycling among the ports on each switch
 				temp = Pod[i][j * (Port_num / 2) + k];
 				NetDeviceContainer link;
 				NodeContainer node;
@@ -222,7 +237,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	for (int i = 0; i < Port_num / 2; i++)    			// labling the l0switch
+	for (int i = 0; i < Port_num / 2; i++)    	// labeling the level 0 switches
 			{
 		for (int j = 0; j < Port_num / 2; j++) {
 			node_l0switch.Get(i * (Port_num / 2) + j)->SetId_FatTree(i, j, 0);
@@ -280,17 +295,17 @@ int main(int argc, char *argv[]) {
 //	clientApps3.Start(Seconds(10.0));
 //	clientApps3.Stop(Seconds(13.0));
 
-	uint16_t port;
-	port = 20;
+	uint16_t dst_port;
+	dst_port = 20;
 //	Config::Set("/NodeList/171/DeviceList/5/TxQueue/TraceDrop",
 //			UintegerValue(1));
 //	Config::Set("/NodeList/167/DeviceList/5/TxQueue/TraceDrop",
 //			UintegerValue(1));
-	Config::Set("/NodeList/129/DeviceList/2/TxQueue/TraceDrop",
-			UintegerValue(1));
+	/*	Config::Set("/NodeList/129/DeviceList/2/TxQueue/TraceDrop",
+	 UintegerValue(1));*/// by Chunzhi
 //	Config::Set("/NodeList/129/DeviceList/2/TxQueue/TraceDrop",
 //			UintegerValue(1));
-	//set failure schedule
+//set failure schedule
 	NodeContainer switchAll;
 	switchAll.Add(node_l2switch);
 	switchAll.Add(node_l1switch);
@@ -298,19 +313,20 @@ int main(int argc, char *argv[]) {
 	Simulator::Schedule(Seconds(failTimeFatTree), setFailure);
 //	Simulator::Schedule(Seconds(10.0), clearFailure, switchAll);
 //	Simulator::Schedule(Seconds(50.0), setFailure);
-	//---------------------------------Bulk and Sink Application-------------------------------//
+//---------------------------------Bulk and Sink Application-------------------------------//
 	BulkSendHelper sourceTarget("ns3::TcpSocketFactory",
-			(InetSocketAddress(Ipv4Address("10.0.193.17"), port)));
+			(InetSocketAddress(serverLabel_address_map["011"], dst_port))); // Node(5), NodeTag("011")
 	BulkSendHelper source1("ns3::TcpSocketFactory",
-			(InetSocketAddress(Ipv4Address("10.0.193.17"), port + 1)));
+			(InetSocketAddress(serverLabel_address_map["011"], dst_port + 1)));
 //	BulkSendHelper source2("ns3::TcpSocketFactory",
-//			(InetSocketAddress(Ipv4Address("10.0.193.33"), port)));
+//			(InetSocketAddress(serverTag_address_map["012"], port))); // Node(6), NodeTag("012")
 	BulkSendHelper source3("ns3::TcpSocketFactory",
-			(InetSocketAddress(Ipv4Address("10.7.192.17"), port))); // Node(113)
+			(InetSocketAddress(serverLabel_address_map["701"], dst_port))); // Node(113), NodeTag("701")
 	BulkSendHelper source4("ns3::TcpSocketFactory",
-			(InetSocketAddress(Ipv4Address("10.6.193.1"), port))); //Node(100)
+			(InetSocketAddress(serverLabel_address_map["610"], dst_port))); //Node(100), NodeTag("610")
 //	BulkSendHelper source5("ns3::TcpSocketFactory",
-//			(InetSocketAddress(Ipv4Address("10.3.192.33"), port + 5))); // Node(50)
+//			(InetSocketAddress(serverTag_address_map["302"], port + 5))); // Node(50), NodeTag("302")
+
 	/*----------------------------------Test---------------------------------*/
 //	BulkSendHelper sourceTest("ns3::TcpSocketFactory",
 //			(InetSocketAddress(Ipv4Address("10.3.192.33"), port + 5))); // Node(50)
@@ -331,7 +347,6 @@ int main(int argc, char *argv[]) {
 //	ApplicationContainer sinkAppsTest2 = sinkTest2.Install(node_server.Get(89));
 //	sinkAppsTest2.Start(Seconds(startTimeFatTree));
 //	sinkAppsTest2.Stop(Seconds(stopTimeFatTree));
-
 	/*------------------------------------------------------------------------*/
 
 	sourceTarget.SetAttribute("MaxBytes", UintegerValue(0));
@@ -341,24 +356,36 @@ int main(int argc, char *argv[]) {
 	source4.SetAttribute("MaxBytes", UintegerValue(0));
 //	source5.SetAttribute("MaxBytes", UintegerValue(0));
 	ApplicationContainer sourceAppsTarget = sourceTarget.Install(
-			node_server.Get(35));
+			node_server.Get(serverLabel_id_map["203"])); // "203" -> "011"
 	sourceAppsTarget.Start(Seconds(startTimeFatTree));
 	sourceAppsTarget.Stop(Seconds(stopTimeFatTree));
-	ApplicationContainer sourceApps1 = source1.Install(node_server.Get(18));
+	ApplicationContainer sourceApps1 = source1.Install(
+			node_server.Get(serverLabel_id_map["102"])); // "102" -> "011"
 	sourceApps1.Start(Seconds(startTimeFatTree));
 	sourceApps1.Stop(Seconds(stopTimeFatTree));
-//	ApplicationContainer sourceApps2 = source2.Install(node_server.Get(23));
+//	ApplicationContainer sourceApps2 = source2.Install(node_server.Get(serverTag_id_map["113"])); // NodeTag("113")
 //	sourceApps2.Start(Seconds(startTimeFatTree));
 //	sourceApps2.Stop(Seconds(stopTimeFatTree));
-	ApplicationContainer sourceApps3 = source3.Install(node_server.Get(20)); // NodeId(110)
+	ApplicationContainer sourceApps3 = source3.Install(
+			node_server.Get(serverLabel_id_map["110"])); // "110" -> "701"
 	sourceApps3.Start(Seconds(startTimeFatTree));
 	sourceApps3.Stop(Seconds(stopTimeFatTree));
-	ApplicationContainer sourceApps4 = source4.Install(node_server.Get(40)); //NodeId(220)
+	ApplicationContainer sourceApps4 = source4.Install(
+			node_server.Get(serverLabel_id_map["220"])); // "220" -> "610"
 	sourceApps4.Start(Seconds(startTimeFatTree));
 	sourceApps4.Stop(Seconds(stopTimeFatTree));
-//	ApplicationContainer sourceApps5 = source5.Install(node_server.Get(21)); // NodeId(111)
+//	ApplicationContainer sourceApps5 = source5.Install(node_server.Get(serverTag_id_map["111"])); // NodeTag("111")
 //	sourceApps5.Start(Seconds(startTimeFatTree));
 //	sourceApps5.Stop(Seconds(stopTimeFatTree));
+
+	// server_label -> turning_switch_label
+	// Note that the adding order is important, i.e. the first matching pair is used.
+//	server_turning_pairs.push_back(std::make_pair("203", "32x"));
+//	server_turning_pairs.push_back(std::make_pair("102", "31x"));
+	server_turning_pairs.push_back(std::make_pair("110", "31x"));
+	server_turning_pairs.push_back(std::make_pair("220", "32x"));
+	server_turning_pairs.push_back(std::make_pair("011", "00x"));
+	server_turning_pairs.push_back(std::make_pair("111", "31x"));
 
 //	BulkSendApplication* sendTarget =
 //			dynamic_cast<BulkSendApplication*>(&(*sourceAppsTarget.Get(0)));
@@ -377,36 +404,44 @@ int main(int argc, char *argv[]) {
 ////	send5->SetAttribute("TraceCwndOutputFile", StringValue("cwnd21.txt"));
 
 	PacketSinkHelper sinkTarget("ns3::TcpSocketFactory",
-			(InetSocketAddress(Ipv4Address("10.0.193.17"), port)));
+			(InetSocketAddress(serverLabel_address_map["011"], dst_port))); // Node(5), NodeTag("011")
 	PacketSinkHelper sink1("ns3::TcpSocketFactory",
-			(InetSocketAddress(Ipv4Address("10.0.193.17"), port + 1)));
+			(InetSocketAddress(serverLabel_address_map["011"], dst_port + 1)));
 	PacketSinkHelper sink2("ns3::TcpSocketFactory",
-			(InetSocketAddress(Ipv4Address("10.0.193.33"), port)));
+			(InetSocketAddress(serverLabel_address_map["012"], dst_port))); // Node(6), NodeTag("012")
 	PacketSinkHelper sink3("ns3::TcpSocketFactory",
-			(InetSocketAddress(Ipv4Address("10.7.192.17"), port)));
+			(InetSocketAddress(serverLabel_address_map["701"], dst_port))); // Node(113), NodeTag("701")
 	PacketSinkHelper sink4("ns3::TcpSocketFactory",
-			(InetSocketAddress(Ipv4Address("10.6.193.1"), port)));
+			(InetSocketAddress(serverLabel_address_map["610"], dst_port))); //Node(100), NodeTag("610")
 	PacketSinkHelper sink5("ns3::TcpSocketFactory",
-			(InetSocketAddress(Ipv4Address("10.3.192.33"), port + 5)));
+			(InetSocketAddress(serverLabel_address_map["302"], dst_port + 5))); // Node(50), NodeTag("302")
+
 	ApplicationContainer sinkAppsTarget = sinkTarget.Install(
-			node_server.Get(5));
+			node_server.Get(serverLabel_id_map["011"]));
 	sinkAppsTarget.Start(Seconds(startTimeFatTree));
 	sinkAppsTarget.Stop(Seconds(stopTimeFatTree));
-	ApplicationContainer sinkApps1 = sink1.Install(node_server.Get(5));
+	ApplicationContainer sinkApps1 = sink1.Install(
+			node_server.Get(serverLabel_id_map["011"])); // NodeTag("011")
 	sinkApps1.Start(Seconds(startTimeFatTree));
 	sinkApps1.Stop(Seconds(stopTimeFatTree));
-	ApplicationContainer sinkApps2 = sink2.Install(node_server.Get(6));
+	ApplicationContainer sinkApps2 = sink2.Install(
+			node_server.Get(serverLabel_id_map["012"])); // NodeTag("012")
 	sinkApps2.Start(Seconds(startTimeFatTree));
 	sinkApps2.Stop(Seconds(stopTimeFatTree));
-	ApplicationContainer sinkApps3 = sink3.Install(node_server.Get(113));
+	ApplicationContainer sinkApps3 = sink3.Install(
+			node_server.Get(serverLabel_id_map["701"])); // NodeTag("701")
 	sinkApps3.Start(Seconds(startTimeFatTree));
 	sinkApps3.Stop(Seconds(stopTimeFatTree));
-	ApplicationContainer sinkApps4 = sink4.Install(node_server.Get(100));
+	ApplicationContainer sinkApps4 = sink4.Install(
+			node_server.Get(serverLabel_id_map["610"])); // NodeTag("610")
 	sinkApps4.Start(Seconds(startTimeFatTree));
 	sinkApps4.Stop(Seconds(stopTimeFatTree));
-	ApplicationContainer sinkApps5 = sink5.Install(node_server.Get(50));
+	ApplicationContainer sinkApps5 = sink5.Install(
+			node_server.Get(serverLabel_id_map["302"])); // NodeTag("302")
 	sinkApps5.Start(Seconds(startTimeFatTree));
 	sinkApps5.Stop(Seconds(stopTimeFatTree));
+
+	std::cout << serverLabel_id_map["011"] << std::endl;
 
 //	p2p.EnablePcap("server tracing 35", node_server.Get(35)->GetDevice(1),
 //			true);
@@ -420,7 +455,8 @@ int main(int argc, char *argv[]) {
 //			true);
 //	p2p.EnablePcap("server tracing 21", node_server.Get(21)->GetDevice(1),
 //			true);
-	//----------------------------------Simulation result-----------------------------------------------//
+
+//----------------------------------Simulation result-----------------------------------------------//
 	Simulator::Stop(Seconds(stopTimeFatTree + 0.01));
 	Simulator::Run();
 	Simulator::Destroy();
